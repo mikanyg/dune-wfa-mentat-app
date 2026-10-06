@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Mahdi.App/Mahdi.App.csproj" />
+    <Project Path="src/Mahdi.Engine/Mahdi.Engine.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Mahdi.App.E2E/Mahdi.App.E2E.csproj" />
+    <Project Path="tests/Mahdi.Engine.Tests/Mahdi.Engine.Tests.csproj" />
+  </Folder>
+</Solution>
