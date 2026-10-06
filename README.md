@@ -1,6 +1,8 @@
-# Mahdi Solo Companion
+# Harkonnen Mentat
 
-A companion web app for the **Mahdi Solo Mode** of *Dune: War for Arrakis*. You play House Atreides on the board; the app runs the Harkonnen automa: it rolls (or records) the Harkonnen dice, draws the Tactical cards, tracks the Reinforcements deck, Imperium markers, Bans, Supremacy and Leaders, and shows one clear instruction per Harkonnen turn.
+*Companion app for Dune: War for Arrakis' Mahdi Solo mode.*
+
+A web app for the **Mahdi Solo Mode** of *Dune: War for Arrakis*. You play House Atreides on the board; the app runs the Harkonnen automa: it rolls (or records) the Harkonnen dice, draws the Tactical cards, tracks the Reinforcements deck, Imperium markers, Bans, Supremacy and Leaders, and shows one clear instruction per Harkonnen turn.
 
 The app cannot see the board, so each Harkonnen result is shown as a short fallback chain ("do the first one that is possible"), already filled in with this round's Target Sietch and Harvesting Sector. On the normal path it takes one tap per Harkonnen turn.
 

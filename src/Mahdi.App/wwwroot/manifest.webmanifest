@@ -1,7 +1,7 @@
 {
-  "name": "Mahdi Solo Companion",
-  "short_name": "Mahdi Solo",
-  "description": "Runs the Harkonnen automa for the Mahdi Solo Mode of Dune: War for Arrakis.",
+  "name": "Harkonnen Mentat",
+  "short_name": "Mentat",
+  "description": "Companion app for Dune: War for Arrakis' Mahdi Solo mode. Runs the Harkonnen automa.",
   "id": "./",
   "start_url": "./",
   "display": "standalone",

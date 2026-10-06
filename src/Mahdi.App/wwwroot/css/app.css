@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Mahdi Solo Companion: theme and layout
+   Harkonnen Mentat: theme and layout
    Light "Desert Parchment" and dark "Arrakis Night", switched with [data-theme].
    ========================================================================== */
 
@@ -398,9 +398,10 @@ h2:focus {
 
 .hero .subtitle {
     font-family: var(--font-display);
-    letter-spacing: 0.3em;
+    letter-spacing: 0.08em;
     color: var(--harkonnen);
-    font-size: 0.95rem;
+    font-size: 1.05rem;
+    margin-top: -8px;
 }
 
 .stack {
