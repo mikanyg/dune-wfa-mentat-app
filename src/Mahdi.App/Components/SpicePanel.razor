@@ -1,0 +1,50 @@
+@using Mahdi.Engine.Commands
+@using Mahdi.Engine.Model
+@using Mahdi.Engine.Rules
+@inject GameSession Session
+
+<section class="spice-panel frame" data-testid="spice-panel">
+    <h2>Spice Harvesting</h2>
+    <p class="muted">Remove the surviving Harvesters from the board and tap once for each.</p>
+    <div class="spice-counters">
+        <div class="counter" data-testid="desert-counter">
+            <span class="counter-label">Desert Harvesters<small>1 spice each</small></span>
+            <div class="counter-controls">
+                <button type="button" class="icon-btn" aria-label="One fewer Desert Harvester" data-testid="desert-minus"
+                        disabled="@(desert == 0)" @onclick="() => desert--">−</button>
+                <span class="counter-value" data-testid="desert-count">@desert</span>
+                <button type="button" class="icon-btn" aria-label="One more Desert Harvester" data-testid="desert-plus"
+                        @onclick="() => desert++">+</button>
+            </div>
+        </div>
+        <div class="counter" data-testid="deep-counter">
+            <span class="counter-label">Deep Desert Harvesters<small>2 spice each</small></span>
+            <div class="counter-controls">
+                <button type="button" class="icon-btn" aria-label="One fewer Deep Desert Harvester" data-testid="deep-minus"
+                        disabled="@(deep == 0)" @onclick="() => deep--">−</button>
+                <span class="counter-value" data-testid="deep-count">@deep</span>
+                <button type="button" class="icon-btn" aria-label="One more Deep Desert Harvester" data-testid="deep-plus"
+                        @onclick="() => deep++">+</button>
+            </div>
+        </div>
+    </div>
+    <p class="spice-total" data-testid="spice-total">
+        <span class="spice-diamond">◆</span> @SpiceRules.Collected(desert, deep) spice
+        @if (State.SpiceReserve > 0)
+        {
+            <span class="muted"> + 1 from the Reserve</span>
+        }
+    </p>
+    <button type="button" class="btn btn-primary btn-big" data-testid="harvest-spice"
+            @onclick="() => Session.Execute(new HarvestSpice(desert, deep))">
+        Spend the spice ▶
+    </button>
+</section>
+
+@code {
+    private int desert;
+    private int deep;
+
+    [Parameter, EditorRequired]
+    public GameState State { get; set; } = default!;
+}

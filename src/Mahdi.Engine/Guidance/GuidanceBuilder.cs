@@ -244,7 +244,8 @@ public sealed class GuidanceBuilder(GameContent content)
     {
         var target = TargetName(state);
         var withLeader = leaderRequired ? " with a Leader" : string.Empty;
-        var attackLegion = leaderRequired ? "Make a Surprise Attack" : "Attack";
+        var attackSietch = leaderRequired ? "Make a Surprise Attack on a Sietch" : "Attack a Sietch";
+        var attackLegion = leaderRequired ? "Make a Surprise Attack on an adjacent Atreides Legion" : "Attack an adjacent Atreides Legion";
 
         var notes = ImmutableArray.CreateBuilder<string>();
         if (leaderRequired)
@@ -261,14 +262,14 @@ public sealed class GuidanceBuilder(GameContent content)
             leaderRequired ? "Attack or move with Legions that have a Leader." : "Attack with a Legion, or move 2 Legions.",
             FirstPossible,
             [
-                new($"{attackLegion} on a Sietch (any Sietch) with the nearest Legion{withLeader} that out-powers the defenders. Use an Ornithopter only if necessary.",
+                new($"{attackSietch} (any Sietch) with the nearest Legion{withLeader} that out-powers the defenders. Use an Ornithopter only if necessary.",
                 [
                     "1. The Sietch with the highest rank (even if unrevealed).",
                     "2. The Legion with the greatest Combat Power difference over the defenders.",
                     "3. A Legion that does not need an Ornithopter.",
                     $"4. The Target Sietch ({target}).",
                 ]),
-                new($"{attackLegion} on an adjacent Atreides Legion with a Legion{withLeader} that out-powers it.",
+                new($"{attackLegion} with a Legion{withLeader} that out-powers it.",
                 [
                     "1. The Atreides Legion with the highest Combat Power.",
                     "2. The Atreides Legion containing a Named Leader.",

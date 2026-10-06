@@ -1,0 +1,42 @@
+@using Mahdi.Engine.Model
+@inject GameSession Session
+
+@if (visible.Count > 0 || Session.LastError is not null)
+{
+    <div class="notices" role="status" aria-live="polite" data-testid="notices">
+        @if (Session.LastError is { } error)
+        {
+            <div class="notice notice-error" data-testid="error">
+                <span>@error</span>
+                <button type="button" class="notice-close" aria-label="Dismiss" @onclick="Session.DismissError">×</button>
+            </div>
+        }
+        @foreach (var notice in visible)
+        {
+            <div class="notice @(notice.Kind == NoticeKind.Important ? "notice-important" : "")" data-testid="notice">
+                <span>@notice.Text</span>
+                <button type="button" class="notice-close" aria-label="Dismiss" @onclick="() => Dismiss(notice)">×</button>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<Notice> visible = [];
+    private object? shownFor;
+
+    [Parameter, EditorRequired]
+    public GameState State { get; set; } = default!;
+
+    protected override void OnParametersSet()
+    {
+        // Show the notices of the latest command; a new state brings a new set.
+        if (!ReferenceEquals(shownFor, State))
+        {
+            shownFor = State;
+            visible = [.. State.Notices];
+        }
+    }
+
+    private void Dismiss(Notice notice) => visible.Remove(notice);
+}

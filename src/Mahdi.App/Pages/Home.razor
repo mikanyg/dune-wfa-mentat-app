@@ -1,4 +1,5 @@
 @page "/"
+@inject GameSession Session
 
 <PageTitle>Mahdi Solo Companion</PageTitle>
 
@@ -6,7 +7,21 @@
     <section class="hero">
         <p class="subtitle">DUNE · WAR FOR ARRAKIS</p>
         <h1>Mahdi Solo</h1>
-        <p class="quote">"The Harkonnens will not rest. Let the app move them, so your eyes stay on the sand."</p>
+        <p class="quote">The Harkonnens will not rest. Let the app move them, so your eyes stay on the sand.</p>
         <div class="ornament"><span>◆</span></div>
+        <div class="stack home-actions">
+            @if (Session.State is { Phase: not Mahdi.Engine.Model.Phase.GameOver } state)
+            {
+                <a class="btn btn-primary btn-big" href="game" data-testid="continue-game">
+                    Continue: Round @(Math.Max(1, state.Round)) · @GameStatusBar.PhaseName(state.Phase)
+                </a>
+                <a class="btn btn-big" href="new" data-testid="new-game">New game</a>
+            }
+            else
+            {
+                <a class="btn btn-primary btn-big" href="new" data-testid="new-game">New game</a>
+            }
+            <a class="btn btn-ghost" href="reference" data-testid="reference-link">Solo rules quick reference</a>
+        </div>
     </section>
 </div>

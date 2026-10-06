@@ -1,0 +1,46 @@
+@page "/new"
+@using Mahdi.Engine.Model
+@using Microsoft.AspNetCore.Components.WebAssembly.Hosting
+@inject GameSession Session
+@inject NavigationManager Navigation
+@inject IWebAssemblyHostEnvironment Environment
+
+<PageTitle>New game · Mahdi Solo</PageTitle>
+
+<div class="page-centered">
+    <section class="hero new-game">
+        <h1>New game</h1>
+        <p class="quote">Who casts the Harkonnen dice?</p>
+        <div class="mode-tiles" role="radiogroup" aria-label="Dice mode">
+            <button type="button" role="radio" aria-checked="@(mode == DiceMode.AppRolls)" data-testid="mode-app"
+                    class="mode-tile @(mode == DiceMode.AppRolls ? "selected" : "")" @onclick="() => mode = DiceMode.AppRolls">
+                <span class="mode-icon"><DieIcon Face="DieFace.Strategy" /></span>
+                <span class="mode-title">The app rolls</span>
+                <span class="mode-desc">One tap per Harkonnen turn. Rerolls are handled for you.</span>
+            </button>
+            <button type="button" role="radio" aria-checked="@(mode == DiceMode.Physical)" data-testid="mode-physical"
+                    class="mode-tile @(mode == DiceMode.Physical ? "selected" : "")" @onclick="() => mode = DiceMode.Physical">
+                <span class="mode-icon"><DieIcon Face="DieFace.House" /></span>
+                <span class="mode-title">I roll the dice</span>
+                <span class="mode-desc">Roll a physical Harkonnen die and tap the result.</span>
+            </button>
+        </div>
+        <p class="muted small-print">Expansions are not supported yet: The Spacing Guild and Desert War are not compatible with Mahdi Solo Mode.</p>
+        <button type="button" class="btn btn-primary btn-big" data-testid="start-game" @onclick="Start">Begin setup ▶</button>
+    </section>
+</div>
+
+@code {
+    private DiceMode mode = DiceMode.AppRolls;
+
+    /// <summary>Fixed seed for reproducible games; only honoured outside Production (used by end-to-end tests).</summary>
+    [SupplyParameterFromQuery(Name = "seed")]
+    public int? Seed { get; set; }
+
+    private void Start()
+    {
+        var seed = Seed is { } fixedSeed && !Environment.IsProduction() ? fixedSeed : Random.Shared.Next();
+        Session.StartNew(mode, seed);
+        Navigation.NavigateTo("game");
+    }
+}

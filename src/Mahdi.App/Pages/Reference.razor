@@ -1,0 +1,36 @@
+@page "/reference"
+@using Mahdi.Engine
+@using Mahdi.Engine.Commands
+@using Mahdi.Engine.Model
+@inject GameSession Session
+
+<PageTitle>Quick reference · Mahdi Solo</PageTitle>
+
+<div class="reference">
+    <header class="reference-head">
+        <h1>Solo rules quick reference</h1>
+        <p class="muted">A paraphrased summary of the Mahdi Solo Mode (rulebook pp. 37-42) and FAQ 3.1. The rulebook is authoritative.</p>
+    </header>
+    <div class="reference-grid">
+        <GuidanceCard Guidance="Session.Guidance.Setup()" Class="frame" NotesOpen="true" TestId="ref-setup" />
+        <GuidanceCard Guidance="Session.Guidance.Combat(SampleState)" Class="frame" NotesOpen="true" TestId="ref-combat" />
+        <GuidanceCard Guidance="Session.Guidance.DesertHazards()" Class="frame" NotesOpen="true" TestId="ref-hazards" />
+        <section class="frame guidance">
+            <h3 class="guidance-title">Special rules</h3>
+            <ul class="reference-list">
+                <li>Harkonnen Bene Gesserit token: take 1 Action die from The Spice Must Flow board instead; if none is there, Supremacy +1.</li>
+                <li>Harkonnen Deployment tokens (both starting sets pooled) count as 1 Unit with Combat Power 2 and are revealed only when they fight or must be revealed.</li>
+                <li>A Harkonnen deck that runs out is reshuffled from its discards.</li>
+                <li>Each voluntary reveal of a Sietch or Atreides Deployment token adds 1 Planning card to the Reinforcements deck (not while the Spacing Guild Ban is active).</li>
+                <li>No voluntary reveal through Guerrilla Training in a Sector connected to an Air Zone with an Ornithopter.</li>
+                <li>Truthtrance (solo): choose the next Harkonnen result instead of rolling, then draw 2 Planning cards or play 1.</li>
+                <li>Hawat's Scheming: the first copy waits next to the board; the second discards both and applies the effect.</li>
+                <li>Thufir Hawat (solo): draw 3 House Harkonnen cards and play them. Gaius Helen Mohiam (solo): draw 3 Corrino Ally cards and play them.</li>
+            </ul>
+        </section>
+    </div>
+</div>
+
+@code {
+    private GameState SampleState => Session.State ?? GameReducer.Initial(Session.Content, DiceMode.AppRolls);
+}

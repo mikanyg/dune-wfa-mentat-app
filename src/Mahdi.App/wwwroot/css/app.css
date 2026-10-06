@@ -185,6 +185,12 @@ button {
     outline-offset: 2px;
 }
 
+/* Blazor moves focus to the page heading after navigation; it should not look selected. */
+h1:focus,
+h2:focus {
+    outline: none;
+}
+
 .quote {
     font-family: var(--font-quote);
     font-style: italic;
@@ -245,6 +251,7 @@ button {
     font-weight: 700;
     letter-spacing: 0.06em;
     cursor: pointer;
+    text-decoration: none;
     user-select: none;
     touch-action: manipulation;
     transition: transform 80ms ease, background-color 120ms ease, box-shadow 120ms ease;

@@ -1,0 +1,36 @@
+@using Mahdi.Engine.Guidance
+@using Mahdi.Engine.Model
+@using Mahdi.Engine.Rules
+
+@* Physical dice mode: the player rolls one Harkonnen die and taps the result. *@
+<div class="face-picker" data-testid="face-picker">
+    @foreach (var face in Enum.GetValues<DieFace>())
+    {
+        var blocked = DiceRules.IsBlocked(Content, Dice, face);
+        <button type="button" class="face-btn @(blocked ? "blocked" : "")" data-testid="face-@face"
+                disabled="@blocked" @onclick="() => OnPick.InvokeAsync(face)"
+                aria-label="@(blocked ? $"{GuidanceBuilder.FaceName(face)}: 3 spent, roll again" : GuidanceBuilder.FaceName(face))">
+            <DieIcon Face="face" />
+            <span class="face-name">@GuidanceBuilder.FaceName(face)</span>
+            @if (blocked)
+            {
+                <span class="face-blocked">3 spent · roll again</span>
+            }
+            else if (Dice.UsedCount(face) > 0)
+            {
+                <span class="face-count">@Dice.UsedCount(face) spent</span>
+            }
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public GameContent Content { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public DiceState Dice { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback<DieFace> OnPick { get; set; }
+}

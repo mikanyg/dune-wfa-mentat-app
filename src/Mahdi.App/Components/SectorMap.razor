@@ -1,0 +1,21 @@
+@using Mahdi.Engine.Model
+
+@* A tiny map of the 8 Sectors: four quadrants around the North Pole, each with a Central and an Outer part. *@
+<svg class="sector-map" viewBox="0 0 120 90" aria-hidden="true">
+    <rect x="1" y="1" width="118" height="88" rx="6" class="sm-board" />
+    <path d="M1 1H60V45H1Z" class="@Outer(Sector.NorthWest)" />
+    <path d="M60 1H119V45H60Z" class="@Outer(Sector.NorthEast)" />
+    <path d="M1 45H60V89H1Z" class="@Outer(Sector.SouthWest)" />
+    <path d="M60 45H119V89H60Z" class="@Outer(Sector.SouthEast)" />
+    <circle cx="60" cy="45" r="27" class="@(Highlight == Sector.Central ? "sm-on" : "sm-central")" />
+    <path d="M60 1V89M1 45H119" class="sm-line" />
+    <circle cx="60" cy="45" r="27" class="sm-ring" />
+    <circle cx="60" cy="45" r="4" class="sm-pole" />
+</svg>
+
+@code {
+    [Parameter]
+    public Sector? Highlight { get; set; }
+
+    private string Outer(Sector sector) => Highlight == sector ? "sm-on" : "sm-outer";
+}

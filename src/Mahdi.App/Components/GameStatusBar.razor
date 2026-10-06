@@ -1,0 +1,62 @@
+@using Mahdi.Engine.Model
+@inject GameSession Session
+@inject NavigationManager Navigation
+@implements IDisposable
+
+@if (Session.State is { } state && OnGamePage)
+{
+    <div class="status-bar" data-testid="status-bar">
+        <span class="status-phase" data-testid="phase" data-phase="@state.Phase">
+            @if (state.Round > 0)
+            {
+                <span class="status-round">Round @state.Round</span>
+                <span class="status-sep">·</span>
+            }
+            @PhaseName(state.Phase)
+        </span>
+        <span class="supremacy" data-testid="supremacy" data-value="@state.Supremacy"
+              aria-label="@($"Harkonnen Supremacy {state.Supremacy} of {Session.Content.Supremacy.Max}")">
+            <span class="supremacy-label">Supremacy</span>
+            <span class="supremacy-track">
+                @for (var i = 1; i <= Session.Content.Supremacy.Max; i++)
+                {
+                    <span class="seg @(i <= state.Supremacy ? "on" : "")"></span>
+                }
+            </span>
+            <span class="supremacy-value">@state.Supremacy</span>
+        </span>
+    </div>
+}
+
+@code {
+    private bool OnGamePage => Navigation.ToBaseRelativePath(Navigation.Uri).StartsWith("game", StringComparison.OrdinalIgnoreCase);
+
+    public static string PhaseName(Phase phase) => phase switch
+    {
+        Phase.Setup => "Setup",
+        Phase.RoundStart => "Start of Round",
+        Phase.VehiclePlacement => "Vehicle Placement",
+        Phase.ActionResolution => "Action Resolution",
+        Phase.DesertHazards => "Desert Hazards",
+        Phase.SpiceHarvesting => "Spice Harvesting",
+        Phase.EndOfRound => "End of Round",
+        Phase.GameOver => "Game Over",
+        _ => phase.ToString(),
+    };
+
+    protected override void OnInitialized()
+    {
+        Session.Changed += OnChanged;
+        Navigation.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e) => OnChanged();
+
+    public void Dispose()
+    {
+        Session.Changed -= OnChanged;
+        Navigation.LocationChanged -= OnLocationChanged;
+    }
+}

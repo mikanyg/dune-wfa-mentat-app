@@ -1,0 +1,72 @@
+@using Mahdi.Engine.Guidance
+
+<article class="guidance @Class" data-testid="@TestId">
+    @if (!string.IsNullOrEmpty(Guidance.Title) && ShowTitle)
+    {
+        <h3 class="guidance-title">@Guidance.Title</h3>
+    }
+    @if (!string.IsNullOrEmpty(Guidance.Headline))
+    {
+        <p class="guidance-headline" data-testid="guidance-headline">@Guidance.Headline</p>
+    }
+    @if (!Guidance.Steps.IsEmpty)
+    {
+        @if (Guidance.StepsLabel is { } label)
+        {
+            <p class="guidance-label">@label</p>
+        }
+        <ol class="guidance-steps @(Guidance.StepsLabel?.Contains("FIRST") == true ? "chain" : "")">
+            @foreach (var step in Guidance.Steps)
+            {
+                <li>
+                    <span class="step-text">@step.Text</span>
+                    @if (!step.Details.IsEmpty)
+                    {
+                        <details class="step-details">
+                            <summary>Tie-breakers and details</summary>
+                            <ul>
+                                @foreach (var detail in step.Details)
+                                {
+                                    <li>@detail</li>
+                                }
+                            </ul>
+                        </details>
+                    }
+                </li>
+            }
+        </ol>
+    }
+    @if (!Guidance.Notes.IsEmpty || Guidance.RuleReference is not null)
+    {
+        <details class="guidance-why" open="@NotesOpen">
+            <summary>Why? Notes and rules</summary>
+            <ul>
+                @foreach (var note in Guidance.Notes)
+                {
+                    <li>@note</li>
+                }
+            </ul>
+            @if (Guidance.RuleReference is { } reference)
+            {
+                <p class="rule-ref">@reference</p>
+            }
+        </details>
+    }
+</article>
+
+@code {
+    [Parameter, EditorRequired]
+    public Guidance Guidance { get; set; } = default!;
+
+    [Parameter]
+    public bool ShowTitle { get; set; } = true;
+
+    [Parameter]
+    public bool NotesOpen { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    [Parameter]
+    public string TestId { get; set; } = "guidance";
+}

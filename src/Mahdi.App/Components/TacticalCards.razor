@@ -1,0 +1,31 @@
+@using Mahdi.Engine.Guidance
+@using Mahdi.Engine.Model
+@inject GameSession Session
+
+<div class="tactical-cards">
+    <div class="tactical-card harvest" data-testid="harvest-card">
+        <span class="tactical-role">Harvesting Sector</span>
+        <SectorMap Highlight="HarvestSector" />
+        <span class="tactical-name">@(HarvestSector is { } s ? GuidanceBuilder.SectorName(s) : "—")</span>
+    </div>
+    <div class="tactical-card target" data-testid="target-card">
+        <span class="tactical-role">Target Sietch</span>
+        <SectorMap Highlight="TargetSector" />
+        <span class="tactical-name">@(TargetCard?.Sietch ?? "No eligible Sietch")</span>
+        @if (TargetCard is { } card)
+        {
+            <span class="tactical-sub">@GuidanceBuilder.SectorName(card.Sector)</span>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public GameState State { get; set; } = default!;
+
+    private Sector? HarvestSector => State.Tactical.HarvestCardId is { } id ? Session.Content.Card(id).Sector : null;
+
+    private TacticalCard? TargetCard => State.Tactical.TargetCardId is { } id ? Session.Content.Card(id) : null;
+
+    private Sector? TargetSector => TargetCard?.Sector;
+}

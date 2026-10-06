@@ -1,0 +1,102 @@
+@using Mahdi.Engine.Commands
+@using Mahdi.Engine.Guidance
+@using Mahdi.Engine.Model
+@inject GameSession Session
+
+@* Action Resolution: one tap per Harkonnen turn. *@
+<div class="war-table" data-testid="war-table">
+    @if (State.Dice.Pending is { } turn)
+    {
+        var guidance = Session.Guidance.Turn(State);
+        var shown = useRegular && guidance.Alternative is not null ? guidance.Alternative : guidance;
+
+        <p class="turn-label">Harkonnen turn @(State.Dice.TurnsTaken + 1)</p>
+        <section class="result-card frame" data-testid="result-card" data-face="@turn.Face">
+            <header class="result-head">
+                <span class="result-die"><DieIcon Face="turn.Face" /></span>
+                <div class="result-title">
+                    <h2 data-testid="result-face">@GuidanceBuilder.FaceName(turn.Face)</h2>
+                    @if (shown.Title != GuidanceBuilder.FaceName(turn.Face))
+                    {
+                        <p class="result-sub" data-testid="result-title">@shown.Title</p>
+                    }
+                </div>
+            </header>
+            @if (!turn.Rerolled.IsEmpty)
+            {
+                <p class="result-reroll" data-testid="rerolled">
+                    Rolled again after @string.Join(", ", turn.Rerolled.Select(GuidanceBuilder.FaceName)) (3 spent dice already show it).
+                </p>
+            }
+            @if (turn.Forced)
+            {
+                <p class="result-reroll">Result chosen with Truthtrance.</p>
+            }
+            <GuidanceCard Guidance="shown" ShowTitle="false" TestId="turn-guidance" />
+            @if (guidance.Alternative is not null)
+            {
+                <button type="button" class="btn btn-ghost btn-small special-toggle" data-testid="special-toggle"
+                        @onclick="() => useRegular = !useRegular">
+                    @(useRegular ? "Use the Leader's special action instead" : "Special action not possible? Show the regular action")
+                </button>
+            }
+        </section>
+        <button type="button" class="btn btn-primary btn-big" data-testid="complete-turn" @onclick="Complete">
+            Done: your Atreides turn ▶
+        </button>
+    }
+    else
+    {
+        <p class="turn-label">Harkonnen turn @(State.Dice.TurnsTaken + 1) of @(State.Dice.TurnsTaken + State.Dice.Unused)</p>
+        <section class="await-card frame" data-testid="await-card">
+            <p class="await-lead">Take your Atreides action on the board. Then:</p>
+            @if (State.Dice.ForcedFace is { } forced)
+            {
+                <button type="button" class="btn btn-primary btn-big" data-testid="roll-die" @onclick="Roll">
+                    <DieIcon Face="forced" /> Play the Truthtrance result: @GuidanceBuilder.FaceName(forced)
+                </button>
+            }
+            else if (State.DiceMode == DiceMode.AppRolls)
+            {
+                <button type="button" class="btn btn-primary btn-big" data-testid="roll-die" @onclick="Roll">
+                    Roll the Harkonnen die ▶
+                </button>
+            }
+            else
+            {
+                <p class="await-hint">Roll 1 unused Harkonnen die and tap the result:</p>
+                <FacePicker Content="Session.Content" Dice="State.Dice" OnPick="Pick" />
+            }
+            <p class="desert-power muted" data-testid="desert-power">
+                The Harkonnens have <strong>@State.Dice.Unused</strong> unused @(State.Dice.Unused == 1 ? "die" : "dice").
+                With fewer unused dice you may take a Desert Power Action.
+            </p>
+        </section>
+    }
+</div>
+
+@code {
+    private bool useRegular;
+
+    [Parameter, EditorRequired]
+    public GameState State { get; set; } = default!;
+
+    private void Roll()
+    {
+        useRegular = false;
+        Session.Execute(new RollHarkonnenDie());
+    }
+
+    private void Pick(DieFace face)
+    {
+        useRegular = false;
+        Session.Execute(new EnterHarkonnenDie(face));
+    }
+
+    private void Complete()
+    {
+        var specialUsed = !useRegular;
+        useRegular = false;
+        Session.Execute(new CompleteHarkonnenTurn(specialUsed));
+    }
+}

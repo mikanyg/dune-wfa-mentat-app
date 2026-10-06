@@ -1,0 +1,177 @@
+@using Mahdi.Engine
+@using Mahdi.Engine.Commands
+@using Mahdi.Engine.Guidance
+@using Mahdi.Engine.Model
+@inject GameSession Session
+
+@* The automa's state at a glance. On short landscape screens it collapses to an icon strip. *@
+<aside class="rail @(open ? "open" : "")" data-testid="state-rail">
+    <button class="rail-strip" type="button" data-testid="rail-toggle" aria-expanded="@open"
+            aria-label="@(open ? "Hide Harkonnen status" : "Show Harkonnen status")" @onclick="() => open = !open">
+        <span class="strip-item" title="Unused Harkonnen dice"><span class="strip-dot"></span>@State.Dice.Unused</span>
+        <span class="strip-item" title="Reinforcements"><span class="strip-card"></span>@State.Reinforcements</span>
+        <span class="strip-item" title="Supremacy"><span class="strip-diamond">◆</span>@State.Supremacy</span>
+        <span class="strip-chevron" aria-hidden="true">@(open ? "‹" : "›")</span>
+    </button>
+
+    <div class="rail-body">
+        <section class="rail-section">
+            <h3>Harkonnen dice</h3>
+            <div class="dice-pips" data-testid="dice-unused" data-count="@State.Dice.Unused"
+                 aria-label="@($"{State.Dice.Unused} unused dice")">
+                @for (var i = 0; i < State.Dice.Unused; i++)
+                {
+                    <span class="pip"></span>
+                }
+                @for (var i = 0; i < State.Dice.TurnsTaken; i++)
+                {
+                    <span class="pip spent"></span>
+                }
+                <span class="pip-label">@State.Dice.Unused unused</span>
+            </div>
+            @if (!State.Dice.UsedFaces.IsEmpty)
+            {
+                <div class="used-faces" data-testid="dice-used">
+                    @foreach (var face in State.Dice.UsedFaces)
+                    {
+                        <span class="used-face" title="@GuidanceBuilder.FaceName(face)"><DieIcon Face="face" /></span>
+                    }
+                </div>
+            }
+            @if (State.Dice.SetAside > 0)
+            {
+                <p class="rail-note">@State.Dice.SetAside set aside on The Spice Must Flow</p>
+            }
+        </section>
+
+        <section class="rail-section">
+            <h3>Target Sietch</h3>
+            <p class="rail-value" data-testid="target-sietch">@TargetName</p>
+            <h3>Harvesting Sector</h3>
+            <p class="rail-value small" data-testid="harvest-sector">@Session.Guidance.HarvestSectorName(State)</p>
+        </section>
+
+        <section class="rail-section">
+            <h3>Reinforcements</h3>
+            <div class="rail-row">
+                <span class="card-stack" data-testid="reinforcements" data-count="@State.Reinforcements">
+                    <span class="card-back"></span>@State.Reinforcements
+                </span>
+                <button class="btn btn-small deck-switch" type="button" data-testid="next-deck"
+                        title="Next Planning card comes from this deck. Tap to correct it."
+                        @onclick="SwitchDeck">
+                    Next: @(State.NextDeck == PlanningDeck.Harkonnen ? "Harkonnen" : "Corrino")
+                </button>
+            </div>
+            @if (State.HawatsSchemingOnTable)
+            {
+                <p class="rail-note">1 Hawat's Scheming waits next to the board.</p>
+            }
+        </section>
+
+        <section class="rail-section">
+            <h3>Imperium</h3>
+            @foreach (var power in Enum.GetValues<ImperiumPower>())
+            {
+                var step = State.Imperium[power];
+                <div class="imperium-row @(State.IsBanActive(power) ? "banned" : "")" data-testid="imperium-@power">
+                    <span class="imperium-name">@Session.Content.Ban(power).Name</span>
+                    <span class="imperium-steps" aria-label="@($"step {step} of {Session.Content.TopStep}")">
+                        @for (var s = Session.Content.BottomStep; s <= Session.Content.TopStep; s++)
+                        {
+                            <span class="step @(s <= step ? "on" : "")"></span>
+                        }
+                    </span>
+                </div>
+            }
+            @if (!State.ActiveBans.IsEmpty)
+            {
+                <div class="ban-chips">
+                    @foreach (var power in State.ActiveBans)
+                    {
+                        <span class="chip chip-ban" title="@Session.Content.Ban(power).SoloEffect">@Session.Content.Ban(power).Name Ban</span>
+                    }
+                </div>
+            }
+            @if (State.SpiceReserve > 0)
+            {
+                <p class="rail-note">Spice Reserve: 1</p>
+            }
+        </section>
+
+        <section class="rail-section">
+            <h3>Leaders</h3>
+            <ul class="leader-list">
+                @foreach (var leader in Session.Content.Leaders.Where(l => State.Leaders[l.Id].Status is not (LeaderStatus.NotInPlay or LeaderStatus.Removed)))
+                {
+                    var ls = State.Leaders[leader.Id];
+                    <li class="leader @StatusClass(ls)" data-testid="leader-@leader.Id">
+                        <button type="button" class="leader-chip" @onclick="() => ToggleLeader(leader.Id)"
+                                aria-expanded="@(selectedLeader == leader.Id)">
+                            <DieIcon Face="leader.Face" Class="leader-face" />
+                            <span class="leader-name">@leader.Name</span>
+                            <span class="leader-status">@StatusText(ls)</span>
+                        </button>
+                        @if (selectedLeader == leader.Id)
+                        {
+                            <div class="leader-actions">
+                                @if (ls.IsActive)
+                                {
+                                    <button type="button" class="btn btn-small" data-testid="leader-killed"
+                                            @onclick="() => Run(new KillLeader(leader.Id))">Killed: to the Tank</button>
+                                }
+                                <button type="button" class="btn btn-small" data-testid="leader-removed"
+                                        @onclick="() => Run(new RemoveLeaderFromGame(leader.Id))">Removed from game</button>
+                            </div>
+                        }
+                    </li>
+                }
+            </ul>
+        </section>
+
+        @if (ChildContent is not null)
+        {
+            <section class="rail-section rail-footer">@ChildContent</section>
+        }
+    </div>
+</aside>
+
+@code {
+    private bool open;
+    private LeaderId? selectedLeader;
+
+    [Parameter, EditorRequired]
+    public GameState State { get; set; } = default!;
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private string TargetName => State.Tactical.TargetCardId is { } id
+        ? Session.Content.Card(id).Sietch
+        : "—";
+
+    private void SwitchDeck() => Session.Execute(new SetNextDeck(GameReducer.Other(State.NextDeck)));
+
+    private void ToggleLeader(LeaderId id) => selectedLeader = selectedLeader == id ? null : id;
+
+    private void Run(GameCommand command)
+    {
+        selectedLeader = null;
+        Session.Execute(command);
+    }
+
+    private static string StatusClass(LeaderState leader) => leader.Status switch
+    {
+        LeaderStatus.InTank => "in-tank",
+        _ when leader.CardSpent => "spent",
+        _ => "ready",
+    };
+
+    private static string StatusText(LeaderState leader) => leader.Status switch
+    {
+        LeaderStatus.InTank => leader.TankPosition == GameReducer.TankStart ? "Tank: start" : $"Tank: {leader.TankPosition}",
+        _ when leader.CardSpent => "spent",
+        LeaderStatus.OnBoard => "on board",
+        _ => "ready",
+    };
+}

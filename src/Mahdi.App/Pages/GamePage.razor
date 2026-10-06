@@ -1,0 +1,89 @@
+@page "/game"
+@using Mahdi.Engine.Commands
+@using Mahdi.Engine.Model
+@inject GameSession Session
+@implements IDisposable
+
+<PageTitle>@Title · Mahdi Solo</PageTitle>
+
+@if (Session.State is not { } state)
+{
+    <div class="page-centered">
+        <section class="hero">
+            <h2>No game in progress</h2>
+            <a class="btn btn-primary" href="new">Start a new game</a>
+        </section>
+    </div>
+}
+else
+{
+    <div class="game-layout">
+        <StateRail State="state" />
+        <section class="stage" data-testid="stage">
+            <NoticeList State="state" />
+            @switch (state.Phase)
+            {
+                case Phase.Setup:
+                    <GuidanceCard Guidance="Session.Guidance.Setup()" Class="frame" NotesOpen="true" TestId="setup-guidance" />
+                    <button type="button" class="btn btn-primary btn-big" data-testid="confirm-phase"
+                            @onclick="() => Session.Execute(new CompleteSetup())">Setup done: start round 1 ▶</button>
+                    break;
+
+                case Phase.RoundStart:
+                    <TacticalCards State="state" />
+                    <GuidanceCard Guidance="Session.Guidance.RoundStart(state)" Class="frame" ShowTitle="false" TestId="round-guidance" />
+                    <button type="button" class="btn btn-primary btn-big" data-testid="confirm-phase"
+                            @onclick="() => Session.Execute(new ConfirmRoundStart())">Continue to Vehicle Placement ▶</button>
+                    break;
+
+                case Phase.VehiclePlacement:
+                    <GuidanceCard Guidance="Session.Guidance.VehiclePlacement(state)" Class="frame" TestId="vehicle-guidance" />
+                    <button type="button" class="btn btn-primary btn-big" data-testid="confirm-phase"
+                            @onclick="() => Session.Execute(new ConfirmVehicles())">Vehicles placed: begin actions ▶</button>
+                    break;
+
+                case Phase.ActionResolution:
+                    <WarTable State="state" />
+                    break;
+
+                case Phase.DesertHazards:
+                    <GuidanceCard Guidance="Session.Guidance.DesertHazards()" Class="frame" TestId="hazards-guidance" />
+                    <button type="button" class="btn btn-primary btn-big" data-testid="confirm-phase"
+                            @onclick="() => Session.Execute(new ConfirmDesertHazards())">Hazards resolved: harvest spice ▶</button>
+                    break;
+
+                case Phase.SpiceHarvesting:
+                    <SpicePanel State="state" />
+                    break;
+
+                case Phase.EndOfRound:
+                    @if (state.LastSpiceResult is { } spice)
+                    {
+                        <GuidanceCard Guidance="Session.Guidance.SpiceResult(spice)" Class="frame" TestId="spice-result" />
+                    }
+                    <GuidanceCard Guidance="Session.Guidance.EndOfRound(state)" Class="frame" TestId="end-guidance" />
+                    <div class="button-row">
+                        <button type="button" class="btn btn-primary btn-big" data-testid="confirm-phase"
+                                @onclick="() => Session.Execute(new EndRound())">End round @state.Round ▶</button>
+                        <button type="button" class="btn btn-big atreides-btn" data-testid="atreides-victory"
+                                @onclick="() => Session.Execute(new DeclareAtreidesVictory())">Atreides objective met</button>
+                    </div>
+                    break;
+
+                case Phase.GameOver:
+                    <GameOverPanel State="state" />
+                    break;
+            }
+        </section>
+    </div>
+}
+
+@code {
+    private string Title => Session.State is { } s ? GameStatusBar.PhaseName(s.Phase) : "Game";
+
+    protected override void OnInitialized() => Session.Changed += OnChanged;
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Session.Changed -= OnChanged;
+}

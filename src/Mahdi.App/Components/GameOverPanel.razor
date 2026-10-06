@@ -1,0 +1,21 @@
+@using Mahdi.Engine.Model
+
+<section class="game-over frame" data-testid="game-over" data-outcome="@State.Outcome">
+    @if (State.Outcome == GameOutcome.HarkonnenVictory)
+    {
+        <h1 class="harkonnen-text">The Harkonnens prevail</h1>
+        <p class="quote">Supremacy reached @State.Supremacy. The spice flows to Giedi Prime.</p>
+    }
+    else
+    {
+        <h1 class="atreides-text">The Mahdi triumphs</h1>
+        <p class="quote">The prophecy is fulfilled. Arrakis belongs to the Fremen and House Atreides.</p>
+    }
+    <p class="muted">Round @State.Round · Supremacy @State.Supremacy</p>
+    <a class="btn btn-primary" href="new" data-testid="new-game-after">Start a new game</a>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public GameState State { get; set; } = default!;
+}
