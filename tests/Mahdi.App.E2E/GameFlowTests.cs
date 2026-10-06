@@ -28,6 +28,9 @@ public sealed class GameFlowTests(string device) : DeviceTest(device)
                 await SnapshotAsync("04-result");
             }
 
+            // The main action stays reachable without scrolling, also on the phone.
+            await Expect(ById("complete-turn")).ToBeInViewportAsync();
+
             await Tap("complete-turn");
         }
 
@@ -44,6 +47,7 @@ public sealed class GameFlowTests(string device) : DeviceTest(device)
 
         await Expect(ById("spice-total")).ToContainTextAsync("6 spice");
         await SnapshotAsync("05-spice");
+        await Expect(ById("harvest-spice")).ToBeInViewportAsync();
         await Tap("harvest-spice");
         await ExpectPhaseAsync("EndOfRound");
         await Expect(ById("spice-result")).ToContainTextAsync("stays on step 5");

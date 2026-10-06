@@ -98,7 +98,8 @@
 /* The main action button stays reachable at the bottom when the instructions are long. */
 .stage > .btn-big,
 .stage > .button-row,
-.war-table > .btn-big {
+.war-table > .btn-big,
+.spice-panel > .btn-big {
     position: sticky;
     bottom: max(10px, env(safe-area-inset-bottom));
     z-index: 5;
