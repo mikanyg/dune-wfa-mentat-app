@@ -1,0 +1,67 @@
+name: Build, test and deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  build_test_deploy:
+    if: github.event_name != 'pull_request' || github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Engine unit tests
+        run: dotnet test tests/Mahdi.Engine.Tests -c Release
+
+      - name: Build E2E tests and install WebKit
+        run: |
+          dotnet build tests/Mahdi.App.E2E -c Release
+          pwsh tests/Mahdi.App.E2E/bin/Release/net10.0/playwright.ps1 install --with-deps webkit
+
+      # The E2E fixture publishes its own copy of the app with the Test environment (seeded games).
+      - name: End-to-end tests (iPad and iPhone landscape)
+        run: dotnet test tests/Mahdi.App.E2E -c Release --no-build
+
+      - name: Upload E2E screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-screenshots
+          path: tests/Mahdi.App.E2E/bin/Release/net10.0/screenshots
+          if-no-files-found: ignore
+
+      - name: Publish the app
+        run: dotnet publish src/Mahdi.App -c Release -o publish
+
+      - name: Deploy to Azure Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: upload
+          app_location: publish/wwwroot
+          skip_app_build: true
+          skip_api_build: true
+
+  close_pull_request:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Remove the pull request preview environment
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: close
