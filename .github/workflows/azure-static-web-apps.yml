@@ -1,6 +1,6 @@
 name: Build, test and deploy
 
-# Changes that only touch Claude Code context or docs do not build or deploy.
+# Changes that only touch Claude Code context, docs or Markdown files do not build or deploy.
 on:
   push:
     branches: [main]
@@ -8,6 +8,7 @@ on:
       - ".claude/**"
       - "CLAUDE.md"
       - "docs/**"
+      - "**/*.md"
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches: [main]
@@ -15,6 +16,7 @@ on:
       - ".claude/**"
       - "CLAUDE.md"
       - "docs/**"
+      - "**/*.md"
   workflow_dispatch:
 
 permissions:
