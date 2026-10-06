@@ -1,22 +1,26 @@
 {
-  "name": "Mahdi.App",
-  "short_name": "Mahdi.App",
+  "name": "Mahdi Solo Companion",
+  "short_name": "Mahdi Solo",
+  "description": "Runs the Harkonnen automa for the Mahdi Solo Mode of Dune: War for Arrakis.",
   "id": "./",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#03173d",
+  "orientation": "any",
+  "background_color": "#12141f",
+  "theme_color": "#12141f",
   "prefer_related_applications": false,
   "icons": [
     {
       "src": "icon-512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     },
     {
       "src": "icon-192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     }
   ]
 }

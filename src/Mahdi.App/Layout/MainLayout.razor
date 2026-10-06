@@ -1,3 +1,38 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
+@inject ThemeService Theme
 
-@Body
+<div class="shell">
+    <header class="shell-header">
+        <a class="shell-title" href="" data-testid="home-link"><span class="diamond">◆</span>Mahdi Solo</a>
+        <div class="spacer"></div>
+        @if (HeaderContent is not null)
+        {
+            @HeaderContent
+        }
+        <ThemeToggle />
+    </header>
+    <main class="shell-main">
+        <CascadingValue Value="this" IsFixed="true">
+            @Body
+        </CascadingValue>
+    </main>
+</div>
+
+@code {
+    private RenderFragment? HeaderContent { get; set; }
+
+    /// <summary>Lets a page place controls in the header (e.g. the game status).</summary>
+    public void SetHeader(RenderFragment? content)
+    {
+        HeaderContent = content;
+        StateHasChanged();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Theme.InitializeAsync();
+        }
+    }
+}
