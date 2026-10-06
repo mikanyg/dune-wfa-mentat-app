@@ -1,0 +1,44 @@
+[
+  {
+    "id": "BaronHarkonnen", "name": "Baron Harkonnen", "deck": "Harkonnen", "face": "House",
+    "entry": "AtStart", "entryStep": null, "replaces": null,
+    "requiresOnBoard": false, "deployFirst": false, "grantsBeneGesserit": false,
+    "special": "Replace 3 Regular Units on the board with 3 Elite Units."
+  },
+  {
+    "id": "BeastRabban", "name": "Beast Rabban", "deck": "Harkonnen", "face": "Leadership",
+    "entry": "AtStart", "entryStep": null, "replaces": null,
+    "requiresOnBoard": true, "deployFirst": true, "grantsBeneGesserit": false,
+    "special": "Move the Legion containing Beast Rabban, then move it again to an adjacent Area (Rabban must take part in each move)."
+  },
+  {
+    "id": "FeydRautha", "name": "Feyd-Rautha", "deck": "Harkonnen", "face": "Leadership",
+    "entry": "SupremacyStep", "entryStep": 6, "replaces": "BeastRabban",
+    "requiresOnBoard": true, "deployFirst": true, "grantsBeneGesserit": false,
+    "special": "Move and attack with the Legion containing Feyd-Rautha."
+  },
+  {
+    "id": "ThufirHawat", "name": "Thufir Hawat", "deck": "Harkonnen", "face": "Mentat",
+    "entry": "SupremacyStep", "entryStep": 1, "replaces": null,
+    "requiresOnBoard": false, "deployFirst": false, "grantsBeneGesserit": false,
+    "special": "Solo: draw 3 House Harkonnen Planning cards and play them immediately."
+  },
+  {
+    "id": "GaiusHelenMohiam", "name": "Gaius Helen Mohiam", "deck": "Corrino", "face": "Mentat",
+    "entry": "WhenHawatRemoved", "entryStep": null, "replaces": null,
+    "requiresOnBoard": false, "deployFirst": false, "grantsBeneGesserit": true,
+    "special": "Solo: draw 3 Corrino Ally Planning cards and play them immediately."
+  },
+  {
+    "id": "CaptainAramsham", "name": "Captain Aramsham", "deck": "Corrino", "face": "Deployment",
+    "entry": "AtStart", "entryStep": null, "replaces": null,
+    "requiresOnBoard": false, "deployFirst": false, "grantsBeneGesserit": false,
+    "special": "Deploy 2 Regular Units, 1 Sardaukar Unit and 1 Leader (Bashar or Named) in one or more Settlements."
+  },
+  {
+    "id": "ShaddamIV", "name": "Emperor Shaddam IV", "deck": "Corrino", "face": "Strategy",
+    "entry": "WhenRageOvercameShaddamPlayed", "entryStep": null, "replaces": null,
+    "requiresOnBoard": false, "deployFirst": false, "grantsBeneGesserit": false,
+    "special": "Replace 3 Elite Units on the board with 3 Sardaukar Units."
+  }
+]

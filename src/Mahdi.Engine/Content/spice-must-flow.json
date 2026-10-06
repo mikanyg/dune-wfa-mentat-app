@@ -1,0 +1,7 @@
+[
+  { "step": 5, "diceSetAside": 0, "harvesters": 3, "ornithopters": 2, "carryalls": 1 },
+  { "step": 4, "diceSetAside": 1, "harvesters": 4, "ornithopters": 2, "carryalls": 1 },
+  { "step": 3, "diceSetAside": 2, "harvesters": 5, "ornithopters": 3, "carryalls": 1 },
+  { "step": 2, "diceSetAside": 3, "harvesters": 5, "ornithopters": 4, "carryalls": 2 },
+  { "step": 1, "diceSetAside": 4, "harvesters": 6, "ornithopters": 4, "carryalls": 2 }
+]

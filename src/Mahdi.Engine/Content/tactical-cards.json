@@ -1,0 +1,10 @@
+[
+  { "id": "rock-outcroppings", "sietch": "Rock Outcroppings", "sector": "NorthWest" },
+  { "id": "bight-of-the-cliff", "sietch": "Bight-of-the-Cliff", "sector": "NorthWest" },
+  { "id": "sihaya-ridge", "sietch": "Sihaya Ridge", "sector": "NorthEast" },
+  { "id": "gara-kulon", "sietch": "Gara Kulon", "sector": "NorthEast" },
+  { "id": "tasmin-sink", "sietch": "Tasmin Sink", "sector": "SouthEast" },
+  { "id": "habbanya-ridge", "sietch": "Habbanya Ridge", "sector": "SouthWest" },
+  { "id": "windgap", "sietch": "Windgap", "sector": "Central" },
+  { "id": "hobars-gap", "sietch": "Hobars Gap", "sector": "Central" }
+]

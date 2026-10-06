@@ -1,0 +1,17 @@
+[
+  {
+    "power": "Landsraad", "name": "Landsraad", "title": "The Forms Must Be Obeyed",
+    "effect": "No discarding Planning cards to add Combat dice during battles.",
+    "soloEffect": "The Harkonnens cannot discard Reinforcements cards for extra Combat dice."
+  },
+  {
+    "power": "Choam", "name": "CHOAM", "title": "Higher Costs of Maintenance",
+    "effect": "Harkonnen Legion stacking limit is reduced to 5 Units.",
+    "soloEffect": "Remove any Units above 5 from Harkonnen Legions immediately."
+  },
+  {
+    "power": "SpacingGuild", "name": "Spacing Guild", "title": "Prohibitive Price for Weather Satellites",
+    "effect": "No Scouting actions.",
+    "soloEffect": "Voluntary reveals of Sietches or Deployment tokens do not add Reinforcements cards."
+  }
+]

@@ -1,0 +1,12 @@
+{
+  "faces": [ "Leadership", "Strategy", "Strategy", "Deployment", "Mentat", "House" ],
+  "diceCount": 8,
+  "slotsPerResult": 3,
+  "truthtranceLimits": {
+    "Leadership": 3,
+    "Strategy": 3,
+    "Deployment": 2,
+    "Mentat": 3,
+    "House": 2
+  }
+}
