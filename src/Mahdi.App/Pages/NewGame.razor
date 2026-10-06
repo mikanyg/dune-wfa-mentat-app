@@ -25,6 +25,10 @@
                 <span class="mode-desc">Roll a physical Harkonnen die and tap the result.</span>
             </button>
         </div>
+        @if (Session.State is { Phase: not Phase.GameOver })
+        {
+            <p class="small-print warning-text" data-testid="replace-warning">Starting a new game replaces the game in progress.</p>
+        }
         <p class="muted small-print">Expansions are not supported yet: The Spacing Guild and Desert War are not compatible with Mahdi Solo Mode.</p>
         <button type="button" class="btn btn-primary btn-big" data-testid="start-game" @onclick="Start">Begin setup ▶</button>
     </section>

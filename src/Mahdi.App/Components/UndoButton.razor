@@ -1,0 +1,32 @@
+@inject GameSession Session
+@inject NavigationManager Navigation
+@implements IDisposable
+
+@if (Session.Game is { } game && Navigation.ToBaseRelativePath(Navigation.Uri).StartsWith("game", StringComparison.OrdinalIgnoreCase))
+{
+    <button class="icon-btn" type="button" data-testid="undo" aria-label="Undo the last step" title="Undo the last step"
+            disabled="@(!game.CanUndo)" @onclick="Session.Undo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 14 4 9l5-5" />
+            <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
+        </svg>
+    </button>
+}
+
+@code {
+    protected override void OnInitialized()
+    {
+        Session.Changed += OnChanged;
+        Navigation.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e) => OnChanged();
+
+    public void Dispose()
+    {
+        Session.Changed -= OnChanged;
+        Navigation.LocationChanged -= OnLocationChanged;
+    }
+}

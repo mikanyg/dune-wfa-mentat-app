@@ -1,0 +1,194 @@
+@using Mahdi.Engine
+@using Mahdi.Engine.Commands
+@using Mahdi.Engine.Guidance
+@using Mahdi.Engine.Model
+@using Mahdi.Engine.Rules
+@inject GameSession Session
+
+@* Less frequent events that change the automa state. Each one is a single command and can be undone. *@
+<div class="sheet-backdrop" data-testid="event-sheet-backdrop" @onclick="Close"></div>
+<section class="sheet" role="dialog" aria-modal="true" aria-label="Game events" data-testid="event-sheet">
+    <header class="sheet-head">
+        @if (view != View.Menu)
+        {
+            <button type="button" class="btn btn-ghost btn-small" data-testid="sheet-back" @onclick="() => view = View.Menu">‹ Back</button>
+        }
+        <h2>@Heading</h2>
+        <button type="button" class="icon-btn" data-testid="sheet-close" aria-label="Close" @onclick="Close">×</button>
+    </header>
+
+    <div class="sheet-body">
+        @switch (view)
+        {
+            case View.Menu:
+                <div class="sheet-grid">
+                    <button type="button" class="sheet-tile" data-testid="ev-battle" @onclick="() => view = View.Battle">
+                        <span class="tile-title">Battle</span>
+                        <span class="tile-desc">Reinforcements for Combat dice, Hits order</span>
+                    </button>
+                    <button type="button" class="sheet-tile" data-testid="ev-sietch" @onclick="() => view = View.Sietch">
+                        <span class="tile-title">Sietch destroyed</span>
+                        <span class="tile-desc">Supremacy + rank; new Target if needed</span>
+                    </button>
+                    <button type="button" class="sheet-tile" data-testid="ev-reveal" disabled="@State.IsBanActive(ImperiumPower.SpacingGuild)"
+                            @onclick="() => Run(new VoluntaryReveal())">
+                        <span class="tile-title">Voluntary reveal</span>
+                        <span class="tile-desc">@(State.IsBanActive(ImperiumPower.SpacingGuild) ? "Spacing Guild Ban: no card" : $"+1 Reinforcements card from {DeckShort}")</span>
+                    </button>
+                    <button type="button" class="sheet-tile" data-testid="ev-draw" @onclick="() => Run(new DrawToReinforcements())">
+                        <span class="tile-title">+1 Reinforcements</span>
+                        <span class="tile-desc">A card effect or unresolvable card (@DeckShort)</span>
+                    </button>
+                    <button type="button" class="sheet-tile" data-testid="ev-bene-gesserit" @onclick="() => Run(new GainBeneGesserit())">
+                        <span class="tile-title">Harkonnen Bene Gesserit</span>
+                        <span class="tile-desc">@(State.Dice.SetAside > 0 ? "+1 Harkonnen die from The Spice Must Flow" : "No die set aside: Supremacy +1")</span>
+                    </button>
+                    @if (CanTruthtrance)
+                    {
+                        <button type="button" class="sheet-tile" data-testid="ev-truthtrance" @onclick="() => view = View.Truthtrance">
+                            <span class="tile-title">Truthtrance played</span>
+                            <span class="tile-desc">Choose the next Harkonnen result</span>
+                        </button>
+                    }
+                    <button type="button" class="sheet-tile" data-testid="ev-scheming" @onclick="() => Run(new PlayHawatsScheming())">
+                        <span class="tile-title">Hawat's Scheming</span>
+                        <span class="tile-desc">@(State.HawatsSchemingOnTable ? "Second copy: discard both, apply effect" : "First copy waits next to the board")</span>
+                    </button>
+                    @if (State.Leaders[LeaderId.ShaddamIV].Status == LeaderStatus.NotInPlay)
+                    {
+                        <button type="button" class="sheet-tile" data-testid="ev-shaddam" @onclick="() => Run(new PlayRageOvercameShaddam())">
+                            <span class="tile-title">Rage Overcame Shaddam IV</span>
+                            <span class="tile-desc">Emperor Shaddam IV enters play</span>
+                        </button>
+                    }
+                    <button type="button" class="sheet-tile" data-testid="ev-dice-mode"
+                            @onclick="() => Run(new ChangeDiceMode(State.DiceMode == DiceMode.AppRolls ? DiceMode.Physical : DiceMode.AppRolls))">
+                        <span class="tile-title">Dice: @(State.DiceMode == DiceMode.AppRolls ? "app rolls" : "physical")</span>
+                        <span class="tile-desc">Switch to @(State.DiceMode == DiceMode.AppRolls ? "rolling physical dice" : "app rolls")</span>
+                    </button>
+                    <button type="button" class="sheet-tile atreides-tile" data-testid="ev-atreides-victory" @onclick="() => view = View.Victory">
+                        <span class="tile-title">Atreides victory</span>
+                        <span class="tile-desc">Secret Objective met (or Arrakeen taken)</span>
+                    </button>
+                </div>
+                break;
+
+            case View.Battle:
+                <CombatHelper State="State" OnDone="Close" />
+                break;
+
+            case View.Sietch:
+                <p class="sheet-lead">Which Sietch was destroyed?</p>
+                <div class="choice-grid">
+                    @foreach (var card in Session.Content.TacticalCards.Where(c => !State.Tactical.DestroyedSietches.Contains(c.Id)))
+                    {
+                        <button type="button" class="choice @(sietch == card.Id ? "selected" : "")" data-testid="sietch-@card.Id"
+                                @onclick="() => sietch = card.Id">
+                            @card.Sietch
+                            @if (card.Id == State.Tactical.TargetCardId)
+                            {
+                                <span class="choice-tag">Target</span>
+                            }
+                        </button>
+                    }
+                </div>
+                @if (sietch is not null)
+                {
+                    <p class="sheet-lead">Its rank:</p>
+                    <div class="choice-grid ranks">
+                        @for (var rank = 1; rank <= 3; rank++)
+                        {
+                            var r = rank;
+                            <button type="button" class="choice rank" data-testid="rank-@r"
+                                    @onclick="() => Run(new DestroySietch(sietch, r))">@r</button>
+                        }
+                    </div>
+                }
+                break;
+
+            case View.Truthtrance:
+                <p class="sheet-lead">Choose the next Harkonnen result. Then draw 2 Planning cards or play 1.</p>
+                <div class="face-picker">
+                    @foreach (var face in Enum.GetValues<DieFace>())
+                    {
+                        var allowed = DiceRules.CanChooseWithTruthtrance(Session.Content, State.Dice, face);
+                        <button type="button" class="face-btn @(allowed ? "" : "blocked")" disabled="@(!allowed)" data-testid="truth-@face"
+                                @onclick="() => Run(new PlayTruthtrance(face))">
+                            <DieIcon Face="face" />
+                            <span class="face-name">@GuidanceBuilder.FaceName(face)</span>
+                            @if (!allowed)
+                            {
+                                <span class="face-blocked">not allowed</span>
+                            }
+                        </button>
+                    }
+                </div>
+                break;
+
+            case View.Victory:
+                <p class="sheet-lead">Did the Atreides reach every score on their Secret Objective?</p>
+                <div class="button-row">
+                    <button type="button" class="btn btn-big atreides-btn" data-testid="confirm-victory"
+                            @onclick="() => Run(new DeclareAtreidesVictory())">Yes, the Atreides win</button>
+                    <button type="button" class="btn btn-big" @onclick="() => view = View.Menu">Not yet</button>
+                </div>
+                break;
+        }
+    </div>
+</section>
+
+@code {
+    private enum View
+    {
+        Menu,
+        Battle,
+        Sietch,
+        Truthtrance,
+        Victory,
+    }
+
+    private View view = View.Menu;
+    private string? sietch;
+
+    [Parameter, EditorRequired]
+    public GameState State { get; set; } = default!;
+
+    [Parameter]
+    public string? StartView { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    private string Heading => view switch
+    {
+        View.Battle => "Battle",
+        View.Sietch => "Sietch destroyed",
+        View.Truthtrance => "Truthtrance",
+        View.Victory => "Atreides victory",
+        _ => "Game events",
+    };
+
+    private string DeckShort => State.NextDeck == PlanningDeck.Harkonnen ? "Harkonnen deck" : "Corrino deck";
+
+    private bool CanTruthtrance => State.Phase == Phase.ActionResolution && State.Dice.Pending is null && State.Dice.Unused > 0;
+
+    protected override void OnInitialized()
+    {
+        view = StartView switch
+        {
+            "battle" => View.Battle,
+            "sietch" => View.Sietch,
+            _ => View.Menu,
+        };
+    }
+
+    private async Task Run(GameCommand command)
+    {
+        if (Session.Execute(command))
+        {
+            await Close();
+        }
+    }
+
+    private Task Close() => OnClose.InvokeAsync();
+}

@@ -1,0 +1,62 @@
+@using Mahdi.Engine.Commands
+@using Mahdi.Engine.Model
+@inject GameSession Session
+
+@* Each battle round the Harkonnens discard Reinforcements cards until they roll 6 Combat dice. *@
+<div class="combat-helper" data-testid="combat-helper">
+    @if (State.IsBanActive(ImperiumPower.Landsraad))
+    {
+        <p class="sheet-lead warning-text">Landsraad Ban active: the Harkonnens cannot discard Reinforcements cards for Combat dice.</p>
+    }
+    else
+    {
+        <p class="sheet-lead">How many Combat dice do the Harkonnens roll before cards? (Units, plus Settlement rank when defending)</p>
+        <div class="choice-grid dice-count">
+            @for (var dice = 1; dice <= 6; dice++)
+            {
+                var d = dice;
+                <button type="button" class="choice rank @(baseDice == d ? "selected" : "")" data-testid="combat-dice-@d"
+                        @onclick="() => baseDice = d">@d</button>
+            }
+        </div>
+        @if (baseDice is { } chosen)
+        {
+            var discard = Math.Min(6 - chosen, State.Reinforcements);
+            <p class="combat-result" data-testid="combat-discard" data-count="@discard">
+                @if (discard == 0)
+                {
+                    @(chosen >= 6 ? "Already 6 dice: discard nothing." : "No Reinforcements cards left: discard nothing.")
+                }
+                else
+                {
+                    <span>Discard <strong>@discard</strong> Reinforcements @(discard == 1 ? "card" : "cards") and roll @(chosen + discard) dice.</span>
+                }
+            </p>
+            @if (discard > 0)
+            {
+                <button type="button" class="btn btn-primary btn-big" data-testid="combat-apply"
+                        @onclick="() => Apply(discard)">Discard @discard and fight ▶</button>
+            }
+        }
+    }
+    <GuidanceCard Guidance="Session.Guidance.Combat(State)" ShowTitle="false" NotesOpen="true" TestId="combat-guidance" />
+</div>
+
+@code {
+    private int? baseDice;
+
+    [Parameter, EditorRequired]
+    public GameState State { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback OnDone { get; set; }
+
+    private async Task Apply(int count)
+    {
+        if (Session.Execute(new DiscardReinforcements(count)))
+        {
+            baseDice = null;
+            await OnDone.InvokeAsync();
+        }
+    }
+}

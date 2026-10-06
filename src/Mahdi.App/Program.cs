@@ -8,6 +8,7 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped<ThemeService>();
-builder.Services.AddSingleton<GameSession>();
+builder.Services.AddScoped<GameStore>();
+builder.Services.AddScoped<GameSession>();
 
 await builder.Build().RunAsync();

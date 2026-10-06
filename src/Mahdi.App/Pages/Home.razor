@@ -1,5 +1,6 @@
 @page "/"
 @inject GameSession Session
+@implements IDisposable
 
 <PageTitle>Mahdi Solo Companion</PageTitle>
 
@@ -10,7 +11,11 @@
         <p class="quote">The Harkonnens will not rest. Let the app move them, so your eyes stay on the sand.</p>
         <div class="ornament"><span>◆</span></div>
         <div class="stack home-actions">
-            @if (Session.State is { Phase: not Mahdi.Engine.Model.Phase.GameOver } state)
+            @if (!Session.IsLoaded)
+            {
+                <p class="muted">Unrolling the maps…</p>
+            }
+            else if (Session.State is { Phase: not Mahdi.Engine.Model.Phase.GameOver } state)
             {
                 <a class="btn btn-primary btn-big" href="game" data-testid="continue-game">
                     Continue: Round @(Math.Max(1, state.Round)) · @GameStatusBar.PhaseName(state.Phase)
@@ -25,3 +30,11 @@
         </div>
     </section>
 </div>
+
+@code {
+    protected override void OnInitialized() => Session.Changed += OnChanged;
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Session.Changed -= OnChanged;
+}

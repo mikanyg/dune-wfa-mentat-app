@@ -6,7 +6,11 @@
 
 <PageTitle>@Title · Mahdi Solo</PageTitle>
 
-@if (Session.State is not { } state)
+@if (!Session.IsLoaded)
+{
+    <div class="page-centered"><p class="muted">Unrolling the maps…</p></div>
+}
+else if (Session.State is not { } state)
 {
     <div class="page-centered">
         <section class="hero">
@@ -21,6 +25,14 @@ else
         <StateRail State="state" />
         <section class="stage" data-testid="stage">
             <NoticeList State="state" />
+            @if (state.Phase is not (Phase.Setup or Phase.GameOver))
+            {
+                <nav class="quick-actions" aria-label="Game events">
+                    <button type="button" class="btn btn-small" data-testid="open-battle" @onclick='() => OpenSheet("battle")'>⚔ Battle</button>
+                    <button type="button" class="btn btn-small" data-testid="open-sietch" @onclick='() => OpenSheet("sietch")'>Sietch destroyed</button>
+                    <button type="button" class="btn btn-small" data-testid="open-events" @onclick='() => OpenSheet("menu")'>⋯ More events</button>
+                </nav>
+            }
             @switch (state.Phase)
             {
                 case Phase.Setup:
@@ -76,9 +88,18 @@ else
             }
         </section>
     </div>
+
+    @if (sheet is not null)
+    {
+        <EventSheet State="state" StartView="@sheet" OnClose="() => sheet = null" />
+    }
 }
 
 @code {
+    private string? sheet;
+
+    private void OpenSheet(string view) => sheet = view;
+
     private string Title => Session.State is { } s ? GameStatusBar.PhaseName(s.Phase) : "Game";
 
     protected override void OnInitialized() => Session.Changed += OnChanged;

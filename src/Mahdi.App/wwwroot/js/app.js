@@ -29,6 +29,28 @@ window.mahdi = (function () {
     media.addEventListener("change", () => apply(read()));
 
     return {
+        storageGet: (name) => {
+            try {
+                return localStorage.getItem(name);
+            } catch {
+                return null;
+            }
+        },
+        storageSet: (name, value) => {
+            try {
+                localStorage.setItem(name, value);
+                return true;
+            } catch {
+                return false;
+            }
+        },
+        storageRemove: (name) => {
+            try {
+                localStorage.removeItem(name);
+            } catch {
+                // Nothing stored, nothing to remove.
+            }
+        },
         initTheme: () => apply(read()),
         getThemePreference: read,
         setThemePreference: (preference) => {
