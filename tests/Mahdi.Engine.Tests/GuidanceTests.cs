@@ -111,4 +111,69 @@ public class GuidanceTests
 
         Assert.That(Builder.Turn(game.State).Notes, Has.Some.Contains("CHOAM Ban"));
     }
+
+    [Test]
+    public void SetupListsTheLeadersInPlayAtTheStart()
+    {
+        var guidance = GuidanceBuilder.Setup();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(guidance.Steps.Select(s => s.Text), Has.Some.Contains("Baron Harkonnen, Beast Rabban and Captain Aramsham"));
+            Assert.That(guidance.Notes, Has.Some.Contains("If you can, you choose"));
+        }
+    }
+
+    [Test]
+    public void DesertHazardsListsTheHitOrder()
+    {
+        var guidance = GuidanceBuilder.DesertHazards();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(guidance.Steps, Has.Length.EqualTo(4));
+            Assert.That(guidance.Steps[0].Text, Does.Contain("Bashar Leaders first"));
+        }
+    }
+
+    [Test]
+    public void CombatCountsReinforcementsOrReportsTheLandsraadBan()
+    {
+        var game = TestGame.InActionResolution();
+        Assert.That(GuidanceBuilder.Combat(game.State).Headline, Does.Contain("6 Combat dice (2 available)"));
+
+        var banned = game.State with { ActiveBans = [ImperiumPower.Landsraad] };
+        Assert.That(GuidanceBuilder.Combat(banned).Headline, Does.Contain("Landsraad Ban"));
+    }
+
+    [Test]
+    public void SpiceResultDescribesEachMarkerAndTheReserve()
+    {
+        var game = TestGame.InActionResolution();
+        TestGame.SpendAllDice(game);
+        game.Execute(new ConfirmDesertHazards());
+        game.Execute(new HarvestSpice(DesertHarvesters: 5, DeepDesertHarvesters: 0));
+
+        var guidance = GuidanceBuilder.SpiceResult(game.State.LastSpiceResult!);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(guidance.Headline, Does.Contain("5 spice"));
+            Assert.That(guidance.Steps.Select(s => s.Text), Has.Some.Contains("drops to step 4"));
+            Assert.That(guidance.Notes, Has.Some.Contains("Spice Reserve token"));
+        }
+    }
+
+    [Test]
+    public void SpiceResultMentionsTheSupremacyPoint()
+    {
+        var game = TestGame.InActionResolution();
+        TestGame.SpendAllDice(game);
+        game.Execute(new ConfirmDesertHazards());
+        game.Execute(new HarvestSpice(DesertHarvesters: 1, DeepDesertHarvesters: 4));
+
+        var guidance = GuidanceBuilder.SpiceResult(game.State.LastSpiceResult!);
+
+        Assert.That(guidance.Steps.Select(s => s.Text), Has.Some.Contains("1 Supremacy point"));
+    }
 }
