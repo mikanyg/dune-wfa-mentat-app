@@ -2,6 +2,7 @@
 @using Mahdi.Engine
 @using Mahdi.Engine.Commands
 @using Mahdi.Engine.Model
+@using Mahdi.Engine.Guidance
 @inject GameSession Session
 
 <PageTitle>Quick reference · Harkonnen Mentat</PageTitle>
@@ -12,9 +13,9 @@
         <p class="muted">A paraphrased summary of the Mahdi Solo Mode (rulebook pp. 37-42) and FAQ 3.1. The rulebook is authoritative.</p>
     </header>
     <div class="reference-grid">
-        <GuidanceCard Guidance="Session.Guidance.Setup()" Class="frame" NotesOpen="true" TestId="ref-setup" />
-        <GuidanceCard Guidance="Session.Guidance.Combat(SampleState)" Class="frame" NotesOpen="true" TestId="ref-combat" />
-        <GuidanceCard Guidance="Session.Guidance.DesertHazards()" Class="frame" NotesOpen="true" TestId="ref-hazards" />
+        <GuidanceCard Guidance="GuidanceBuilder.Setup()" Class="frame" NotesOpen="true" TestId="ref-setup" />
+        <GuidanceCard Guidance="GuidanceBuilder.Combat(SampleState)" Class="frame" NotesOpen="true" TestId="ref-combat" />
+        <GuidanceCard Guidance="GuidanceBuilder.DesertHazards()" Class="frame" NotesOpen="true" TestId="ref-hazards" />
         <section class="frame guidance">
             <h3 class="guidance-title">Special rules</h3>
             <ul class="reference-list">

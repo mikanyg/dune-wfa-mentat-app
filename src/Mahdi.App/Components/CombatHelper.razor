@@ -1,5 +1,6 @@
 @using Mahdi.Engine.Commands
 @using Mahdi.Engine.Model
+@using Mahdi.Engine.Guidance
 @inject GameSession Session
 
 @* Each battle round the Harkonnens discard Reinforcements cards until they roll 6 Combat dice. *@
@@ -44,7 +45,7 @@
             }
         }
     }
-    <GuidanceCard Guidance="Session.Guidance.Combat(State)" ShowTitle="false" NotesOpen="true" TestId="combat-guidance" />
+    <GuidanceCard Guidance="GuidanceBuilder.Combat(State)" ShowTitle="false" NotesOpen="true" TestId="combat-guidance" />
 </div>
 
 @code {

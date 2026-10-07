@@ -12,11 +12,14 @@ public class LeaderTests
     {
         var state = TestGame.New().State;
 
-        Assert.That(state.Leaders[LeaderId.BaronHarkonnen].Status, Is.EqualTo(LeaderStatus.InReserve));
-        Assert.That(state.Leaders[LeaderId.BeastRabban].Status, Is.EqualTo(LeaderStatus.InReserve));
-        Assert.That(state.Leaders[LeaderId.CaptainAramsham].Status, Is.EqualTo(LeaderStatus.InReserve));
-        Assert.That(state.Leaders[LeaderId.ThufirHawat].Status, Is.EqualTo(LeaderStatus.NotInPlay));
-        Assert.That(state.Leaders[LeaderId.FeydRautha].Status, Is.EqualTo(LeaderStatus.NotInPlay));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(state.Leaders[LeaderId.BaronHarkonnen].Status, Is.EqualTo(LeaderStatus.InReserve));
+            Assert.That(state.Leaders[LeaderId.BeastRabban].Status, Is.EqualTo(LeaderStatus.InReserve));
+            Assert.That(state.Leaders[LeaderId.CaptainAramsham].Status, Is.EqualTo(LeaderStatus.InReserve));
+            Assert.That(state.Leaders[LeaderId.ThufirHawat].Status, Is.EqualTo(LeaderStatus.NotInPlay));
+            Assert.That(state.Leaders[LeaderId.FeydRautha].Status, Is.EqualTo(LeaderStatus.NotInPlay));
+        }
     }
 
     [Test]
@@ -76,8 +79,11 @@ public class LeaderTests
             game.Execute(new CompleteHarkonnenTurn());
         }
 
-        Assert.That(deployed[0], Is.EqualTo(LeaderId.BeastRabban));
-        Assert.That(deployed[1], Is.Not.Null.And.Not.EqualTo(LeaderId.BeastRabban));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(deployed[0], Is.EqualTo(LeaderId.BeastRabban));
+            Assert.That(deployed[1], Is.Not.Null.And.Not.EqualTo(LeaderId.BeastRabban));
+        }
 
         var state = game.State with
         {
@@ -127,9 +133,12 @@ public class LeaderTests
 
         TestGame.AdvanceToRound(game, 2);
 
-        Assert.That(game.State.Supremacy, Is.EqualTo(1));
-        Assert.That(game.State.Leaders[LeaderId.ThufirHawat].Status, Is.EqualTo(LeaderStatus.InReserve));
-        Assert.That(game.State.Notices.Select(n => n.Text), Has.Some.Contains("Thufir Hawat enters play"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(game.State.Supremacy, Is.EqualTo(1));
+            Assert.That(game.State.Leaders[LeaderId.ThufirHawat].Status, Is.EqualTo(LeaderStatus.InReserve));
+            Assert.That(game.State.Notices.Select(n => n.Text), Has.Some.Contains("Thufir Hawat enters play"));
+        }
     }
 
     [Test]
@@ -140,9 +149,12 @@ public class LeaderTests
         game.Execute(new DestroySietch("windgap", 3));
         game.Execute(new DestroySietch("hobars-gap", 3));
 
-        Assert.That(game.State.Supremacy, Is.EqualTo(6));
-        Assert.That(game.State.Leaders[LeaderId.FeydRautha].Status, Is.EqualTo(LeaderStatus.InReserve));
-        Assert.That(game.State.Leaders[LeaderId.BeastRabban].Status, Is.EqualTo(LeaderStatus.Removed));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(game.State.Supremacy, Is.EqualTo(6));
+            Assert.That(game.State.Leaders[LeaderId.FeydRautha].Status, Is.EqualTo(LeaderStatus.InReserve));
+            Assert.That(game.State.Leaders[LeaderId.BeastRabban].Status, Is.EqualTo(LeaderStatus.Removed));
+        }
     }
 
     [Test]
@@ -164,8 +176,11 @@ public class LeaderTests
 
         game.Execute(new RemoveLeaderFromGame(LeaderId.ThufirHawat));
 
-        Assert.That(game.State.Leaders[LeaderId.GaiusHelenMohiam].Status, Is.EqualTo(LeaderStatus.InReserve));
-        Assert.That(game.State.Notices.Select(n => n.Text), Has.Some.Contains("Bene Gesserit token"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(game.State.Leaders[LeaderId.GaiusHelenMohiam].Status, Is.EqualTo(LeaderStatus.InReserve));
+            Assert.That(game.State.Notices.Select(n => n.Text), Has.Some.Contains("Bene Gesserit token"));
+        }
     }
 
     [Test]

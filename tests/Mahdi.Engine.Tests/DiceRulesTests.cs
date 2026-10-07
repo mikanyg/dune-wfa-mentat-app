@@ -25,8 +25,11 @@ public class DiceRulesTests
 
         var (face, rerolled) = DiceRules.Roll(Content, dice, new ScriptedRandom(1, 2, 4));
 
-        Assert.That(face, Is.EqualTo(DieFace.Mentat));
-        Assert.That(rerolled, Is.EqualTo(new[] { DieFace.Strategy, DieFace.Strategy }));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(face, Is.EqualTo(DieFace.Mentat));
+            Assert.That(rerolled, Is.EqualTo(new[] { DieFace.Strategy, DieFace.Strategy }));
+        }
     }
 
     [Test]
@@ -34,8 +37,11 @@ public class DiceRulesTests
     {
         var (face, rerolled) = DiceRules.Roll(Content, new DiceState(), new ScriptedRandom(5));
 
-        Assert.That(face, Is.EqualTo(DieFace.House));
-        Assert.That(rerolled, Is.Empty);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(face, Is.EqualTo(DieFace.House));
+            Assert.That(rerolled, Is.Empty);
+        }
     }
 
     [TestCase(DieFace.Deployment, 1, true)]

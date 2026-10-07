@@ -46,7 +46,7 @@ public sealed class GuidanceBuilder(GameContent content)
             ? $"{content.Card(id).Sietch} ({SectorName(content.Card(id).Sector)})"
             : "None";
 
-    public Guidance Setup() => new(
+    public static Guidance Setup() => new(
         "Setup",
         "Set up as for a 2-player game, with these solo changes:",
         null,
@@ -123,7 +123,7 @@ public sealed class GuidanceBuilder(GameContent content)
         return Special(state, turn, content.Leader(leader)) with { Alternative = regular };
     }
 
-    public Guidance DesertHazards() => new(
+    public static Guidance DesertHazards() => new(
         "Desert Hazards",
         "Play this phase as usual.",
         "Apply Coriolis Storm Hits to Harkonnen Legions in this order:",
@@ -131,7 +131,7 @@ public sealed class GuidanceBuilder(GameContent content)
         ["Harkonnen Legions retreat when a Sandworm appears in their Area (this is not a battle) (FAQ)."],
         "Rulebook pp. 38, 41");
 
-    public Guidance SpiceResult(SpiceResult result)
+    public static Guidance SpiceResult(SpiceResult result)
     {
         var steps = result.Markers.Select(m => new GuidanceStep(MarkerText(m))).ToList();
         if (result.SupremacyGained)
@@ -174,7 +174,7 @@ public sealed class GuidanceBuilder(GameContent content)
         [],
         "Rulebook p. 39");
 
-    public Guidance Combat(GameState state) => new(
+    public static Guidance Combat(GameState state) => new(
         "Harkonnen battle",
         state.IsBanActive(ImperiumPower.Landsraad)
             ? "Landsraad Ban: no Reinforcements cards may be discarded for Combat dice."

@@ -1,6 +1,7 @@
 @page "/game"
 @using Mahdi.Engine.Commands
 @using Mahdi.Engine.Model
+@using Mahdi.Engine.Guidance
 @inject GameSession Session
 @implements IDisposable
 
@@ -36,7 +37,7 @@ else
             @switch (state.Phase)
             {
                 case Phase.Setup:
-                    <GuidanceCard Guidance="Session.Guidance.Setup()" Class="frame" NotesOpen="true" TestId="setup-guidance" />
+                    <GuidanceCard Guidance="GuidanceBuilder.Setup()" Class="frame" NotesOpen="true" TestId="setup-guidance" />
                     <button type="button" class="btn btn-primary btn-big" data-testid="confirm-phase"
                             @onclick="() => Session.Execute(new CompleteSetup())">Setup done: start round 1 ▶</button>
                     break;
@@ -59,7 +60,7 @@ else
                     break;
 
                 case Phase.DesertHazards:
-                    <GuidanceCard Guidance="Session.Guidance.DesertHazards()" Class="frame" TestId="hazards-guidance" />
+                    <GuidanceCard Guidance="GuidanceBuilder.DesertHazards()" Class="frame" TestId="hazards-guidance" />
                     <button type="button" class="btn btn-primary btn-big" data-testid="confirm-phase"
                             @onclick="() => Session.Execute(new ConfirmDesertHazards())">Hazards resolved: harvest spice ▶</button>
                     break;
@@ -71,7 +72,7 @@ else
                 case Phase.EndOfRound:
                     @if (state.LastSpiceResult is { } spice)
                     {
-                        <GuidanceCard Guidance="Session.Guidance.SpiceResult(spice)" Class="frame" TestId="spice-result" />
+                        <GuidanceCard Guidance="GuidanceBuilder.SpiceResult(spice)" Class="frame" TestId="spice-result" />
                     }
                     <GuidanceCard Guidance="Session.Guidance.EndOfRound(state)" Class="frame" TestId="end-guidance" />
                     <div class="button-row">
