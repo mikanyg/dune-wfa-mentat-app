@@ -190,6 +190,9 @@ public sealed class GuidanceBuilder(GameContent content)
         ],
         "Rulebook p. 41");
 
+    private const string UnitAvailabilityNote =
+        "If a Unit type is not available, use the type with the next higher Combat Power (or the next lower if none).";
+
     private const string CombatPowerNote =
         "Combat Power: 1 per Unit, 2 per Deployment token, +1 per Leader. For ties or single Units: Generic Leader 1, Regular Unit or Named Leader 2, Elite 3, Sardaukar or Fedaykin 4. Sietch rank does not count.";
 
@@ -199,7 +202,7 @@ public sealed class GuidanceBuilder(GameContent content)
         DieFace.Strategy => Military(state, "Strategy", false),
         DieFace.Deployment => Deployment(state, turn, "3 Regular Units", "Deployment"),
         DieFace.Mentat => Mentat(state, turn),
-        DieFace.House => House(state, 2),
+        DieFace.House => House(state),
         _ => throw new ArgumentOutOfRangeException(nameof(turn), turn.Face, null),
     };
 
@@ -225,11 +228,14 @@ public sealed class GuidanceBuilder(GameContent content)
             Headline = $"Draw 3 {DeckName(leader.Deck)} Planning cards and play them immediately, one at a time.",
             Notes = [$"{leader.Name}'s card is spent (solo variant of the special action)."],
         },
-        LeaderId.BaronHarkonnen => House(state, 3) with
-        {
-            Title = "House: Baron Harkonnen",
-            Notes = [$"{leader.Name}'s card is spent."],
-        },
+        // The special replaces the regular House Action, so no Vehicles are placed.
+        LeaderId.BaronHarkonnen => new Guidance(
+            "House: Baron Harkonnen",
+            "Replace 3 Regular Units on the board with 3 Elite Units. No Vehicles are placed.",
+            "Choose the Legions in this priority:",
+            ReplacePriority(state),
+            [$"{leader.Name}'s card is spent (the special action replaces the regular House Action).", UnitAvailabilityNote],
+            "Rulebook pp. 39-40"),
         LeaderId.ShaddamIV => new Guidance(
             "Strategy: Emperor Shaddam IV",
             "Replace 3 Elite Units on the board with 3 Sardaukar Units.",
@@ -315,7 +321,7 @@ public sealed class GuidanceBuilder(GameContent content)
         }
 
         notes.Add("Respect the stacking limit: deploy any excess Units in another Settlement, using the same priority.");
-        notes.Add("If a Unit type is not available, use the type with the next higher Combat Power (or the next lower if none).");
+        notes.Add(UnitAvailabilityNote);
         AddBanNotes(state, notes);
 
         return new Guidance(
@@ -342,18 +348,18 @@ public sealed class GuidanceBuilder(GameContent content)
                 new("Deploy, move or attack: use the Deployment or Leadership and Strategy criteria."),
                 new("Place or replace Units: use the House criteria."),
                 new("Place Vehicles: use the Vehicle Placement rules."),
-                new("Draw cards: draw them alternately and put them on the Reinforcements deck (tap +1 Reinforcements for each)."),
+                new("Draw cards: draw them alternately and put them on the Reinforcements deck (More events: Add Reinforcements)."),
                 new("Play a card: draw and play the next card in the alternation."),
                 new($"Any other effect: make it happen as close as possible to, or toward, {TargetName(state)}."),
             ],
             [
-                "If part of a card cannot be resolved, the card has no effect and goes onto the Reinforcements deck instead (tap +1 Reinforcements).",
+                "If part of a card cannot be resolved, the card has no effect and goes onto the Reinforcements deck instead (More events: Add Reinforcements).",
                 "Hawat's Scheming: the first copy goes next to the board; when a second is played, discard both and apply the effect.",
             ],
             "Rulebook p. 40");
     }
 
-    private Guidance House(GameState state, int replaced)
+    private Guidance House(GameState state)
     {
         var notes = ImmutableArray.CreateBuilder<string>();
         AddBanNotes(state, notes);
@@ -362,7 +368,7 @@ public sealed class GuidanceBuilder(GameContent content)
             "Apply both effects, top one first.",
             "In order:",
             [
-                new($"Replace {replaced} Regular Units with {replaced} Elite Units, choosing Legions in this priority:",
+                new("Replace 2 Regular Units with 2 Elite Units, choosing Legions in this priority:",
                     [.. ReplacePriority(state).Select(s => s.Text)]),
                 new($"Place 1 Harvester and 1 Ornithopter using the Vehicle Placement rules (Harvester in {HarvestSectorName(state)})."),
             ],

@@ -31,13 +31,13 @@
                         <span class="tile-desc">Supremacy + rank; new Target if needed</span>
                     </button>
                     <button type="button" class="sheet-tile" data-testid="ev-reveal" disabled="@State.IsBanActive(ImperiumPower.SpacingGuild)"
-                            @onclick="() => Run(new VoluntaryReveal())">
+                            @onclick="() => view = View.Reveal">
                         <span class="tile-title">Voluntary reveal</span>
-                        <span class="tile-desc">@(State.IsBanActive(ImperiumPower.SpacingGuild) ? "Spacing Guild Ban: no card" : $"+1 Reinforcements card from {DeckShort}")</span>
+                        <span class="tile-desc">@(State.IsBanActive(ImperiumPower.SpacingGuild) ? "Spacing Guild Ban: no card" : "1 Reinforcements card per revealed token")</span>
                     </button>
-                    <button type="button" class="sheet-tile" data-testid="ev-draw" @onclick="() => Run(new DrawToReinforcements())">
-                        <span class="tile-title">+1 Reinforcements</span>
-                        <span class="tile-desc">A card effect or unresolvable card (@DeckShort)</span>
+                    <button type="button" class="sheet-tile" data-testid="ev-draw" @onclick="() => view = View.Draw">
+                        <span class="tile-title">Add Reinforcements</span>
+                        <span class="tile-desc">A card effect, or a card that could not be resolved</span>
                     </button>
                     <button type="button" class="sheet-tile" data-testid="ev-bene-gesserit" @onclick="() => Run(new GainBeneGesserit())">
                         <span class="tile-title">Harkonnen Bene Gesserit</span>
@@ -125,6 +125,24 @@
                 </div>
                 break;
 
+            case View.Reveal:
+            case View.Draw:
+                <p class="sheet-lead">
+                    @(view == View.Reveal ? "How many Sietches and Deployment tokens were revealed?" : "How many cards go to the Reinforcements deck?")
+                </p>
+                <p class="muted">Draw them facedown, alternating decks. The top of the Harkonnen discard pile decides where to start.</p>
+                <div class="choice-grid draw-count">
+                    @for (var count = 1; count <= 4; count++)
+                    {
+                        var c = count;
+                        <button type="button" class="choice draw-choice" data-testid="draw-@c" @onclick="() => AddReinforcements(c)">
+                            <span class="draw-count-value">@c</span>
+                            <span class="draw-order">@string.Join(", ", GameReducer.DrawOrder(State.NextDeck, c).Select(DeckName))</span>
+                        </button>
+                    }
+                </div>
+                break;
+
             case View.Victory:
                 <p class="sheet-lead">Did the Atreides reach every score on their Secret Objective?</p>
                 <div class="button-row">
@@ -144,6 +162,8 @@
         Battle,
         Sietch,
         Truthtrance,
+        Reveal,
+        Draw,
         Victory,
     }
 
@@ -165,10 +185,15 @@
         View.Sietch => "Sietch destroyed",
         View.Truthtrance => "Truthtrance",
         View.Victory => "Atreides victory",
+        View.Reveal => "Voluntary reveal",
+        View.Draw => "Add Reinforcements",
         _ => "Game events",
     };
 
-    private string DeckShort => State.NextDeck == PlanningDeck.Harkonnen ? "Harkonnen deck" : "Corrino deck";
+    private static string DeckName(PlanningDeck deck) => deck == PlanningDeck.Harkonnen ? "Harkonnen" : "Corrino";
+
+    private Task AddReinforcements(int count) =>
+        Run(view == View.Reveal ? new VoluntaryReveal(count) : new DrawToReinforcements(count));
 
     private bool CanTruthtrance => State.Phase == Phase.ActionResolution && State.Dice.Pending is null && State.Dice.Unused > 0;
 

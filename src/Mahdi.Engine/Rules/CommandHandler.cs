@@ -8,6 +8,9 @@ namespace Mahdi.Engine.Rules;
 /// <summary>Validates a command against the current state and produces the resulting events.</summary>
 public static class CommandHandler
 {
+    /// <summary>Most Planning cards added to the Reinforcements deck by a single event.</summary>
+    public const int MaxDraw = 6;
+
     public static ImmutableArray<GameEvent> Handle(GameContent content, GameState state, GameCommand command, IRandomSource random)
     {
         var batch = new Batch(content, state);
@@ -121,21 +124,23 @@ public static class CommandHandler
 
                 break;
 
-            case VoluntaryReveal:
+            case VoluntaryReveal x:
                 Require(!state.IsBanActive(ImperiumPower.SpacingGuild),
                     "The Spacing Guild Ban is active: voluntary reveals add no Reinforcements.");
-                batch.Emit(new ReinforcementAdded("Voluntary reveal"));
+                Require(x.Count is >= 1 and <= MaxDraw, $"Draw between 1 and {MaxDraw} cards.");
+                batch.Emit(new ReinforcementsDrawn(x.Count, "Voluntary reveal"));
                 break;
 
-            case DrawToReinforcements:
-                batch.Emit(new ReinforcementAdded("Card effect"));
+            case DrawToReinforcements x:
+                Require(x.Count is >= 1 and <= MaxDraw, $"Draw between 1 and {MaxDraw} cards.");
+                batch.Emit(new ReinforcementsDrawn(x.Count, "Card effect"));
                 break;
 
             case DiscardReinforcements x:
                 Require(!state.IsBanActive(ImperiumPower.Landsraad),
                     "The Landsraad Ban is active: Reinforcements cannot be discarded for Combat dice.");
                 Require(x.Count > 0 && x.Count <= state.Reinforcements, "Not enough Reinforcements cards.");
-                batch.Emit(new ReinforcementsDiscarded(x.Count));
+                batch.Emit(new ReinforcementsDiscarded(x.Count, x.LastDiscardedFrom));
                 break;
 
             case GainBeneGesserit:

@@ -43,9 +43,22 @@ public class GuidanceTests
         var guidance = Builder.Turn(game.State);
 
         Assert.That(guidance.Title, Does.Contain("Baron Harkonnen"));
-        Assert.That(guidance.Steps[0].Text, Does.Contain("Replace 3 Regular Units"));
+        Assert.That(guidance.Headline, Does.Contain("Replace 3 Regular Units"));
         Assert.That(guidance.Alternative, Is.Not.Null);
         Assert.That(guidance.Alternative!.Steps[0].Text, Does.Contain("Replace 2 Regular Units"));
+    }
+
+    [Test]
+    public void BaronSpecialReplacesTheRegularHouseActionWithoutVehicles()
+    {
+        var game = TestGame.InActionResolution(DiceMode.Physical);
+
+        game.Execute(new EnterHarkonnenDie(DieFace.House));
+        var guidance = Builder.Turn(game.State);
+
+        Assert.That(guidance.Headline, Does.Contain("No Vehicles"));
+        Assert.That(guidance.Steps.Select(s => s.Text), Has.None.Contains("Harvester"));
+        Assert.That(guidance.Alternative!.Steps[1].Text, Does.Contain("1 Harvester and 1 Ornithopter"));
     }
 
     [Test]

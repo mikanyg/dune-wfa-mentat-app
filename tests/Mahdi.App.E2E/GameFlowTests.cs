@@ -91,6 +91,7 @@ public sealed class GameFlowTests(string device) : DeviceTest(device)
         await Tap("face-House");
         await Expect(ById("result-title")).ToHaveTextAsync("House: Baron Harkonnen");
         await Expect(ById("turn-guidance")).ToContainTextAsync("Replace 3 Regular Units");
+        await Expect(ById("turn-guidance")).Not.ToContainTextAsync("Ornithopter");
 
         await Tap("special-toggle");
         await Expect(ById("turn-guidance")).ToContainTextAsync("Replace 2 Regular Units");
@@ -131,9 +132,28 @@ public sealed class GameFlowTests(string device) : DeviceTest(device)
         await Tap("combat-dice-5");
         await Expect(ById("combat-discard")).ToHaveAttributeAsync("data-count", "1");
         await SnapshotAsync("battle");
-        await Tap("combat-apply");
+        await Tap("combat-apply-Harkonnen");
 
         await Expect(ById("reinforcements")).ToHaveAttributeAsync("data-count", "1");
+
+        // A House Harkonnen card is now on top of the discard pile, so the next draw starts from Corrino.
+        await Expect(ById("next-deck")).ToContainTextAsync("Corrino");
+    }
+
+    [Test]
+    public async Task AddingReinforcementsShowsTheDeckOrderAndKeepsTheNextDeck()
+    {
+        await StartGameAsync(seed: 20);
+        await AdvanceToActionsAsync();
+
+        await Tap("open-events");
+        await Tap("ev-draw");
+        await Expect(ById("draw-2")).ToContainTextAsync("Harkonnen, Corrino");
+        await SnapshotAsync("add-reinforcements");
+        await Tap("draw-2");
+
+        await Expect(ById("reinforcements")).ToHaveAttributeAsync("data-count", "4");
+        await Expect(ById("next-deck")).ToContainTextAsync("Harkonnen");
     }
 
     [Test]

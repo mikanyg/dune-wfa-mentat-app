@@ -34,8 +34,13 @@
             </p>
             @if (discard > 0)
             {
-                <button type="button" class="btn btn-primary btn-big" data-testid="combat-apply"
-                        @onclick="() => Apply(discard)">Discard @discard and fight ▶</button>
+                <p class="sheet-lead">Discard them, then tap the deck of the <em>last</em> card discarded (it decides where the next draw starts):</p>
+                <div class="button-row">
+                    <button type="button" class="btn btn-primary btn-big" data-testid="combat-apply-Harkonnen"
+                            @onclick="() => Apply(discard, PlanningDeck.Harkonnen)">Last was House Harkonnen</button>
+                    <button type="button" class="btn btn-primary btn-big" data-testid="combat-apply-Corrino"
+                            @onclick="() => Apply(discard, PlanningDeck.Corrino)">Last was Corrino Ally</button>
+                </div>
             }
         }
     }
@@ -51,9 +56,9 @@
     [Parameter]
     public EventCallback OnDone { get; set; }
 
-    private async Task Apply(int count)
+    private async Task Apply(int count, PlanningDeck lastDiscarded)
     {
-        if (Session.Execute(new DiscardReinforcements(count)))
+        if (Session.Execute(new DiscardReinforcements(count, lastDiscarded)))
         {
             baseDice = null;
             await OnDone.InvokeAsync();

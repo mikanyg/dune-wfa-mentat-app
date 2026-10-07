@@ -195,17 +195,56 @@ public class GameFlowTests
     }
 
     [Test]
-    public void ReinforcementsAlternateDecks()
+    public void DrawingIntoReinforcementsDoesNotChangeTheNextDeck()
     {
+        // The next deck follows the top of the Harkonnen discard pile, which a facedown draw does not change.
         var game = TestGame.InActionResolution();
         Assert.That(game.State.NextDeck, Is.EqualTo(PlanningDeck.Harkonnen));
 
         game.Execute(new DrawToReinforcements());
-        Assert.That(game.State.NextDeck, Is.EqualTo(PlanningDeck.Corrino));
+        game.Execute(new VoluntaryReveal(Count: 3));
 
-        game.Execute(new DrawToReinforcements());
         Assert.That(game.State.NextDeck, Is.EqualTo(PlanningDeck.Harkonnen));
-        Assert.That(game.State.Reinforcements, Is.EqualTo(4));
+        Assert.That(game.State.Reinforcements, Is.EqualTo(6));
+    }
+
+    [Test]
+    public void MultiCardDrawsAlternateDecksStartingFromTheNextDeck()
+    {
+        Assert.That(GameReducer.DrawOrder(PlanningDeck.Corrino, 3),
+            Is.EqualTo(new[] { PlanningDeck.Corrino, PlanningDeck.Harkonnen, PlanningDeck.Corrino }));
+    }
+
+    [Test]
+    public void DiscardingReinforcementsSetsTheNextDeckFromTheLastDiscardedCard()
+    {
+        var game = TestGame.InActionResolution();
+
+        game.Execute(new DiscardReinforcements(2, LastDiscardedFrom: PlanningDeck.Harkonnen));
+        Assert.That(game.State.NextDeck, Is.EqualTo(PlanningDeck.Corrino));
+        Assert.That(game.State.Reinforcements, Is.Zero);
+    }
+
+    [Test]
+    public void DrawCountMustBeReasonable()
+    {
+        var game = TestGame.InActionResolution();
+
+        Assert.Throws<CommandRejectedException>(() => game.Execute(new DrawToReinforcements(0)));
+        Assert.Throws<CommandRejectedException>(() => game.Execute(new VoluntaryReveal(7)));
+    }
+
+    [Test]
+    public void SavesWithTheLegacyReinforcementEventStillReplay()
+    {
+        var game = TestGame.InActionResolution(seed: 3);
+        var legacy = game.ToSave();
+        legacy = legacy with { History = legacy.History.Add([new ReinforcementAdded("Voluntary reveal")]) };
+
+        var loaded = Game.FromSave(TestGame.Content, SaveData.FromJson(legacy.ToJson()));
+
+        Assert.That(loaded.State.Reinforcements, Is.EqualTo(3));
+        Assert.That(loaded.State.NextDeck, Is.EqualTo(PlanningDeck.Corrino));
     }
 
     [Test]

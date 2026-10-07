@@ -1081,6 +1081,24 @@ details[open] > summary::before {
     gap: 8px;
 }
 
+.draw-choice {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    text-align: left;
+}
+
+.draw-count-value {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+}
+
+.draw-order {
+    font-size: 0.8rem;
+    font-weight: 400;
+    color: var(--text-muted);
+}
+
 .choice.rank {
     justify-content: center;
     font-family: var(--font-display);
@@ -1107,6 +1125,15 @@ details[open] > summary::before {
 
 .combat-result {
     font-size: 1.15rem;
+}
+
+/* Keep the battle decision buttons reachable while the Hits notes scroll underneath. */
+.combat-helper .button-row {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    padding: 6px 0;
+    background: var(--surface);
 }
 
 @keyframes fade-in {
@@ -1330,6 +1357,15 @@ details[open] > summary::before {
 
     .quick-actions .btn {
         min-height: 40px;
+    }
+
+    .choice-grid.draw-count {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .combat-helper .btn-big {
+        min-height: 48px;
+        font-size: 0.95rem;
     }
 
     .hero {

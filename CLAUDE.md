@@ -56,7 +56,8 @@ E2E screenshots go to `tests/Mahdi.App.E2E/bin/<config>/net10.0/screenshots/<dev
 - A killed Leader enters the Regeneration Tank on "Start here" and returns after 5 Harkonnen turns, with its card ready.
 - Truthtrance limits follow the solo text: 3 spent, or 2 for Deployment/House.
 - Tactical card Sectors were read from component photos (`Content/tactical-cards.json`); Windgap and Hobars Gap are the Central cards.
-- After a regular Mentat result the next deck stays the same (2 cards alternate). After the Hawat or Mohiam special it flips to the other deck.
+- Deck alternation follows the top of the Harkonnen discard pile (next deck = the other deck; House Harkonnen when the pile is empty). Facedown draws into Reinforcements alternate within the draw but do not change the next deck; battle discards ask for the deck of the last discarded card. After a regular Mentat result the next deck stays the same (2 cards alternate); after the Hawat or Mohiam special it flips. The legacy `ReinforcementAdded` event (flips the deck) is kept only so old saves replay.
+- Baron Harkonnen's special replaces the regular House Action: replace 3 Regular Units with Elite Units and place no Vehicles.
 - Deployment names one Named Leader in reserve (Rabban/Feyd first); others are listed as "if you can, you choose".
 
 ## Scope

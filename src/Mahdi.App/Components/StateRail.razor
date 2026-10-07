@@ -58,7 +58,7 @@
                     <span class="card-back"></span>@State.Reinforcements
                 </span>
                 <button class="btn btn-small deck-switch" type="button" data-testid="next-deck"
-                        title="Next Planning card comes from this deck. Tap to correct it."
+                        title="Next Planning card is drawn from this deck: the opposite of the top card of the Harkonnen discard pile. Tap to correct it."
                         @onclick="SwitchDeck">
                     Next: @(State.NextDeck == PlanningDeck.Harkonnen ? "Harkonnen" : "Corrino")
                 </button>

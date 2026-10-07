@@ -50,7 +50,12 @@ public static class GameReducer
             Reinforcements = state.Reinforcements + 1,
             NextDeck = Other(state.NextDeck),
         },
-        ReinforcementsDiscarded x => state with { Reinforcements = Math.Max(0, state.Reinforcements - x.Count) },
+        ReinforcementsDrawn x => state with { Reinforcements = state.Reinforcements + x.Count },
+        ReinforcementsDiscarded x => state with
+        {
+            Reinforcements = Math.Max(0, state.Reinforcements - x.Count),
+            NextDeck = x.LastDiscardedFrom is { } top ? Other(top) : state.NextDeck,
+        },
         BeneGesseritGained => GainBeneGesserit(content, state),
         LeaderKilled x => KillLeader(content, state, x.Leader),
         LeaderRemovedFromGame x => RemoveLeader(content, state, x.Leader),
@@ -67,6 +72,18 @@ public static class GameReducer
 
     public static PlanningDeck Other(PlanningDeck deck) =>
         deck == PlanningDeck.Harkonnen ? PlanningDeck.Corrino : PlanningDeck.Harkonnen;
+
+    /// <summary>
+    /// The decks to draw from for a multi-card draw: alternating, starting from the deck opposite the
+    /// top card of the Harkonnen discard pile (House Harkonnen when the pile is empty).
+    /// </summary>
+    public static IEnumerable<PlanningDeck> DrawOrder(PlanningDeck start, int count)
+    {
+        for (var i = 0; i < count; i++)
+        {
+            yield return i % 2 == 0 ? start : Other(start);
+        }
+    }
 
     private static GameState StartRound(GameContent content, GameState state, RoundStarted x)
     {

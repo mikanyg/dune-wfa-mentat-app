@@ -23,6 +23,7 @@ namespace Mahdi.Engine.Events;
 [JsonDerivedType(typeof(SietchDestroyed), "sietchDestroyed")]
 [JsonDerivedType(typeof(TargetSietchDrawn), "targetDrawn")]
 [JsonDerivedType(typeof(ReinforcementAdded), "reinforcementAdded")]
+[JsonDerivedType(typeof(ReinforcementsDrawn), "reinforcementsDrawn")]
 [JsonDerivedType(typeof(ReinforcementsDiscarded), "reinforcementsDiscarded")]
 [JsonDerivedType(typeof(BeneGesseritGained), "beneGesseritGained")]
 [JsonDerivedType(typeof(LeaderKilled), "leaderKilled")]
@@ -73,10 +74,20 @@ public sealed record SietchDestroyed(string CardId, int Rank) : GameEvent;
 /// <param name="Reshuffled">No eligible card was left, so the discarded cards were shuffled back first.</param>
 public sealed record TargetSietchDrawn(string? TargetCardId, ImmutableArray<string> Rejected, bool Reshuffled) : GameEvent;
 
-/// <summary>One Planning card added to the Reinforcements deck from the next deck in alternation.</summary>
+/// <summary>
+/// Legacy (saves from before deck alternation followed the discard pile): one card added to the
+/// Reinforcements deck, flipping the next deck. Kept so old saved games replay unchanged.
+/// </summary>
 public sealed record ReinforcementAdded(string Reason) : GameEvent;
 
-public sealed record ReinforcementsDiscarded(int Count) : GameEvent;
+/// <summary>
+/// Planning cards drawn facedown into the Reinforcements deck, alternating decks within the draw and
+/// starting from the next deck. Drawing does not change the discard pile, so the next deck stays the same.
+/// </summary>
+public sealed record ReinforcementsDrawn(int Count, string Reason) : GameEvent;
+
+/// <param name="LastDiscardedFrom">Deck of the last card discarded; it is now on top of the discard pile.</param>
+public sealed record ReinforcementsDiscarded(int Count, PlanningDeck? LastDiscardedFrom = null) : GameEvent;
 
 public sealed record BeneGesseritGained : GameEvent;
 
