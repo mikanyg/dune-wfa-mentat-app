@@ -24,14 +24,37 @@ public abstract class DeviceTest(string device) : PageTest
         return options;
     }
 
+    /// <summary>
+    /// Downloading and starting the WebAssembly runtime can take a while on a busy CI runner, so startup
+    /// gets a longer budget than ordinary steps. The header link renders once Blazor is running.
+    /// </summary>
+    private const float AppStartTimeoutMs = 120_000;
+
     protected ILocator ById(string testId) => Page.GetByTestId(testId);
+
+    /// <summary>Navigates to a page of the app and waits until Blazor has started.</summary>
+    protected async Task OpenAsync(string url)
+    {
+        await Page.GotoAsync(url, new() { Timeout = AppStartTimeoutMs });
+        await WaitForAppAsync();
+    }
+
+    /// <summary>Reloads the page and waits until Blazor has started again.</summary>
+    protected async Task ReloadAsync()
+    {
+        await Page.ReloadAsync(new() { Timeout = AppStartTimeoutMs });
+        await WaitForAppAsync();
+    }
+
+    private Task WaitForAppAsync() =>
+        ById("home-link").WaitForAsync(new() { Timeout = AppStartTimeoutMs });
 
     protected Task Tap(string testId) => ById(testId).First.ClickAsync();
 
     /// <summary>Starts a new game with a fixed seed and lands on the setup screen.</summary>
     protected async Task StartGameAsync(int seed, bool physicalDice = false)
     {
-        await Page.GotoAsync($"new?seed={seed}");
+        await OpenAsync($"new?seed={seed}");
         if (physicalDice)
         {
             await Tap("mode-physical");

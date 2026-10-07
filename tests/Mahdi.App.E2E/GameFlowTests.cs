@@ -184,11 +184,11 @@ public sealed class GameFlowTests(string device) : DeviceTest(device)
 
         await Expect(ById("dice-unused")).ToHaveAttributeAsync("data-count", "6");
 
-        await Page.ReloadAsync();
+        await ReloadAsync();
         await ExpectPhaseAsync("ActionResolution");
         await Expect(ById("dice-unused")).ToHaveAttributeAsync("data-count", "6");
 
-        await Page.GotoAsync("");
+        await OpenAsync("");
         await Expect(ById("continue-game")).ToContainTextAsync("Round 1");
     }
 
@@ -205,7 +205,7 @@ public sealed class GameFlowTests(string device) : DeviceTest(device)
         await Expect(html).ToHaveAttributeAsync("data-theme", "dark");
         await SnapshotAsync("theme-dark");
 
-        await Page.ReloadAsync();
+        await ReloadAsync();
         await ExpectPhaseAsync("ActionResolution");
         await Expect(html).ToHaveAttributeAsync("data-theme", "dark");
     }
