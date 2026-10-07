@@ -17,9 +17,12 @@ public class GuidanceTests
         game.Execute(new EnterHarkonnenDie(DieFace.Strategy));
         var guidance = Builder.Turn(game.State);
 
-        Assert.That(guidance.StepsLabel, Does.Contain("FIRST"));
-        Assert.That(guidance.Steps, Has.Length.EqualTo(3));
-        Assert.That(guidance.Steps[2].Text, Does.Contain(target));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(guidance.StepsLabel, Does.Contain("FIRST"));
+            Assert.That(guidance.Steps, Has.Length.EqualTo(3));
+            Assert.That(guidance.Steps[2].Text, Does.Contain(target));
+        }
     }
 
     [Test]
@@ -30,8 +33,11 @@ public class GuidanceTests
         game.Execute(new EnterHarkonnenDie(DieFace.Leadership));
         var guidance = Builder.Turn(game.State);
 
-        Assert.That(guidance.Notes, Has.Some.Contains("only Legions containing at least 1 Leader"));
-        Assert.That(guidance.Steps[0].Text, Does.Contain("Surprise Attack"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(guidance.Notes, Has.Some.Contains("only Legions containing at least 1 Leader"));
+            Assert.That(guidance.Steps[0].Text, Does.Contain("Surprise Attack"));
+        }
     }
 
     [Test]
@@ -42,10 +48,13 @@ public class GuidanceTests
         game.Execute(new EnterHarkonnenDie(DieFace.House));
         var guidance = Builder.Turn(game.State);
 
-        Assert.That(guidance.Title, Does.Contain("Baron Harkonnen"));
-        Assert.That(guidance.Headline, Does.Contain("Replace 3 Regular Units"));
-        Assert.That(guidance.Alternative, Is.Not.Null);
-        Assert.That(guidance.Alternative!.Steps[0].Text, Does.Contain("Replace 2 Regular Units"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(guidance.Title, Does.Contain("Baron Harkonnen"));
+            Assert.That(guidance.Headline, Does.Contain("Replace 3 Regular Units"));
+            Assert.That(guidance.Alternative, Is.Not.Null);
+            Assert.That(guidance.Alternative!.Steps[0].Text, Does.Contain("Replace 2 Regular Units"));
+        }
     }
 
     [Test]
@@ -56,9 +65,12 @@ public class GuidanceTests
         game.Execute(new EnterHarkonnenDie(DieFace.House));
         var guidance = Builder.Turn(game.State);
 
-        Assert.That(guidance.Headline, Does.Contain("No Vehicles"));
-        Assert.That(guidance.Steps.Select(s => s.Text), Has.None.Contains("Harvester"));
-        Assert.That(guidance.Alternative!.Steps[1].Text, Does.Contain("1 Harvester and 1 Ornithopter"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(guidance.Headline, Does.Contain("No Vehicles"));
+            Assert.That(guidance.Steps.Select(s => s.Text), Has.None.Contains("Harvester"));
+            Assert.That(guidance.Alternative!.Steps[1].Text, Does.Contain("1 Harvester and 1 Ornithopter"));
+        }
     }
 
     [Test]

@@ -5,6 +5,9 @@ namespace Mahdi.Engine.Tests;
 
 public class TacticalDeckTests
 {
+    private static readonly string[] SameSectorRejected = ["bight-of-the-cliff"];
+    private static readonly string[] DestroyedRejected = ["bight-of-the-cliff", "sihaya-ridge"];
+
     private static GameContent Content => TestGame.Content;
 
     private static GameState Fresh() => GameReducer.Initial(Content, DiceMode.AppRolls);
@@ -14,9 +17,12 @@ public class TacticalDeckTests
     {
         var round = TacticalDeck.DrawRound(Content, Fresh(), new SeededRandomSource(seed, 0), 1);
 
-        Assert.That(round.TargetCardId, Is.Not.Null);
-        Assert.That(Content.Card(round.TargetCardId!).Sector, Is.Not.EqualTo(Content.Card(round.HarvestCardId).Sector));
-        Assert.That(round.Rejected.Select(id => Content.Card(id).Sector), Is.All.EqualTo(Content.Card(round.HarvestCardId).Sector));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(round.TargetCardId, Is.Not.Null);
+            Assert.That(Content.Card(round.TargetCardId!).Sector, Is.Not.EqualTo(Content.Card(round.HarvestCardId).Sector));
+            Assert.That(round.Rejected.Select(id => Content.Card(id).Sector), Is.All.EqualTo(Content.Card(round.HarvestCardId).Sector));
+        }
     }
 
     [Test]
@@ -25,9 +31,12 @@ public class TacticalDeckTests
         // Deck order by index: rock-outcroppings (NW) is harvest, then bight-of-the-cliff (NW) is rejected.
         var round = TacticalDeck.DrawRound(Content, Fresh(), new ScriptedRandom(0, 0, 0), 1);
 
-        Assert.That(round.HarvestCardId, Is.EqualTo("rock-outcroppings"));
-        Assert.That(round.Rejected, Is.EqualTo(new[] { "bight-of-the-cliff" }));
-        Assert.That(round.TargetCardId, Is.EqualTo("sihaya-ridge"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(round.HarvestCardId, Is.EqualTo("rock-outcroppings"));
+            Assert.That(round.Rejected, Is.EqualTo(SameSectorRejected));
+            Assert.That(round.TargetCardId, Is.EqualTo("sihaya-ridge"));
+        }
     }
 
     [Test]
@@ -40,8 +49,11 @@ public class TacticalDeckTests
 
         var round = TacticalDeck.DrawRound(Content, state, new ScriptedRandom(0, 0, 0, 0), 1);
 
-        Assert.That(round.TargetCardId, Is.EqualTo("gara-kulon"));
-        Assert.That(round.Rejected, Is.EqualTo(new[] { "bight-of-the-cliff", "sihaya-ridge" }));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(round.TargetCardId, Is.EqualTo("gara-kulon"));
+            Assert.That(round.Rejected, Is.EqualTo(DestroyedRejected));
+        }
     }
 
     [Test]
@@ -74,8 +86,11 @@ public class TacticalDeckTests
 
         var drawn = TacticalDeck.RedrawTarget(Content, state, new ScriptedRandom(1, 0));
 
-        Assert.That(drawn.Reshuffled, Is.True);
-        Assert.That(drawn.TargetCardId, Is.Not.Null.And.Not.EqualTo("sihaya-ridge"));
-        Assert.That(Content.Card(drawn.TargetCardId!).Sector, Is.Not.EqualTo(Sector.NorthWest));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(drawn.Reshuffled, Is.True);
+            Assert.That(drawn.TargetCardId, Is.Not.Null.And.Not.EqualTo("sihaya-ridge"));
+            Assert.That(Content.Card(drawn.TargetCardId!).Sector, Is.Not.EqualTo(Sector.NorthWest));
+        }
     }
 }

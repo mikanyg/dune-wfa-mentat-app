@@ -14,19 +14,25 @@ public class GameFlowTests
 
         game.Execute(new CompleteSetup());
 
-        Assert.That(game.State.Phase, Is.EqualTo(Phase.RoundStart));
-        Assert.That(game.State.Round, Is.EqualTo(1));
-        Assert.That(game.State.Tactical.HarvestCardId, Is.Not.Null);
-        Assert.That(game.State.Tactical.TargetCardId, Is.Not.Null);
-        Assert.That(game.State.Reinforcements, Is.EqualTo(2));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(game.State.Phase, Is.EqualTo(Phase.RoundStart));
+            Assert.That(game.State.Round, Is.EqualTo(1));
+            Assert.That(game.State.Tactical.HarvestCardId, Is.Not.Null);
+            Assert.That(game.State.Tactical.TargetCardId, Is.Not.Null);
+            Assert.That(game.State.Reinforcements, Is.EqualTo(2));
+        }
     }
 
     [Test]
     public void PhasesFollowTheRoundSequence()
     {
         var game = TestGame.InActionResolution();
-        Assert.That(game.State.Phase, Is.EqualTo(Phase.ActionResolution));
-        Assert.That(game.State.Dice.Unused, Is.EqualTo(8));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(game.State.Phase, Is.EqualTo(Phase.ActionResolution));
+            Assert.That(game.State.Dice.Unused, Is.EqualTo(8));
+        }
 
         TestGame.SpendAllDice(game);
         Assert.That(game.State.Phase, Is.EqualTo(Phase.DesertHazards));
@@ -38,9 +44,12 @@ public class GameFlowTests
         Assert.That(game.State.Phase, Is.EqualTo(Phase.EndOfRound));
 
         game.Execute(new EndRound());
-        Assert.That(game.State.Phase, Is.EqualTo(Phase.RoundStart));
-        Assert.That(game.State.Round, Is.EqualTo(2));
-        Assert.That(game.State.Supremacy, Is.EqualTo(1));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(game.State.Phase, Is.EqualTo(Phase.RoundStart));
+            Assert.That(game.State.Round, Is.EqualTo(2));
+            Assert.That(game.State.Supremacy, Is.EqualTo(1));
+        }
     }
 
     [Test]
@@ -59,8 +68,11 @@ public class GameFlowTests
         game.Execute(new RollHarkonnenDie());
         game.Execute(new CompleteHarkonnenTurn());
 
-        Assert.That(game.State.Phase, Is.EqualTo(Phase.DesertHazards));
-        Assert.That(game.State.Notices.Select(n => n.Text), Has.Some.Contains("Action Resolution is over"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(game.State.Phase, Is.EqualTo(Phase.DesertHazards));
+            Assert.That(game.State.Notices.Select(n => n.Text), Has.Some.Contains("Action Resolution is over"));
+        }
     }
 
     [Test]
@@ -84,8 +96,11 @@ public class GameFlowTests
             game.Execute(new CompleteHarkonnenTurn());
         }
 
-        Assert.That(game.TryExecute(new EnterHarkonnenDie(DieFace.Strategy), out var error), Is.False);
-        Assert.That(error, Does.Contain("roll the die again"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(game.TryExecute(new EnterHarkonnenDie(DieFace.Strategy), out var error), Is.False);
+            Assert.That(error, Does.Contain("roll the die again"));
+        }
     }
 
     [Test]
@@ -116,9 +131,12 @@ public class GameFlowTests
         Assert.Throws<CommandRejectedException>(() => game.Execute(new EnterHarkonnenDie(DieFace.House)));
         game.Execute(new EnterHarkonnenDie(DieFace.Mentat));
 
-        Assert.That(game.State.Dice.Pending!.Face, Is.EqualTo(DieFace.Mentat));
-        Assert.That(game.State.Dice.Pending.Forced, Is.True);
-        Assert.That(game.State.Dice.ForcedFace, Is.Null);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(game.State.Dice.Pending!.Face, Is.EqualTo(DieFace.Mentat));
+            Assert.That(game.State.Dice.Pending.Forced, Is.True);
+            Assert.That(game.State.Dice.ForcedFace, Is.Null);
+        }
     }
 
     [Test]
@@ -130,8 +148,11 @@ public class GameFlowTests
 
         game.Execute(new GainBeneGesserit());
 
-        Assert.That(game.State.Supremacy, Is.EqualTo(1));
-        Assert.That(game.State.Dice.Unused, Is.EqualTo(unused));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(game.State.Supremacy, Is.EqualTo(1));
+            Assert.That(game.State.Dice.Unused, Is.EqualTo(unused));
+        }
     }
 
     [Test]
@@ -143,13 +164,19 @@ public class GameFlowTests
         game.Execute(new HarvestSpice(0, 0));
         game.Execute(new EndRound());
 
-        Assert.That(game.State.Dice.SetAside, Is.EqualTo(1));
-        Assert.That(game.State.Dice.Unused, Is.EqualTo(7));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(game.State.Dice.SetAside, Is.EqualTo(1));
+            Assert.That(game.State.Dice.Unused, Is.EqualTo(7));
+        }
 
         game.Execute(new GainBeneGesserit());
 
-        Assert.That(game.State.Dice.SetAside, Is.Zero);
-        Assert.That(game.State.Dice.Unused, Is.EqualTo(8));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(game.State.Dice.SetAside, Is.Zero);
+            Assert.That(game.State.Dice.Unused, Is.EqualTo(8));
+        }
     }
 
     [Test]
@@ -161,8 +188,11 @@ public class GameFlowTests
 
         game.Execute(new HarvestSpice(2, 0));
 
-        Assert.That(game.State.ActiveBans, Has.Count.EqualTo(2));
-        Assert.That(game.State.Notices.Count(n => n.Text.Contains("Ban active")), Is.EqualTo(2));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(game.State.ActiveBans, Has.Count.EqualTo(2));
+            Assert.That(game.State.Notices.Count(n => n.Text.Contains("Ban active")), Is.EqualTo(2));
+        }
     }
 
     [Test]
@@ -204,8 +234,11 @@ public class GameFlowTests
         game.Execute(new DrawToReinforcements());
         game.Execute(new VoluntaryReveal(Count: 3));
 
-        Assert.That(game.State.NextDeck, Is.EqualTo(PlanningDeck.Harkonnen));
-        Assert.That(game.State.Reinforcements, Is.EqualTo(6));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(game.State.NextDeck, Is.EqualTo(PlanningDeck.Harkonnen));
+            Assert.That(game.State.Reinforcements, Is.EqualTo(6));
+        }
     }
 
     [Test]
@@ -221,8 +254,11 @@ public class GameFlowTests
         var game = TestGame.InActionResolution();
 
         game.Execute(new DiscardReinforcements(2, LastDiscardedFrom: PlanningDeck.Harkonnen));
-        Assert.That(game.State.NextDeck, Is.EqualTo(PlanningDeck.Corrino));
-        Assert.That(game.State.Reinforcements, Is.Zero);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(game.State.NextDeck, Is.EqualTo(PlanningDeck.Corrino));
+            Assert.That(game.State.Reinforcements, Is.Zero);
+        }
     }
 
     [Test]
@@ -243,8 +279,11 @@ public class GameFlowTests
 
         var loaded = Game.FromSave(TestGame.Content, SaveData.FromJson(legacy.ToJson()));
 
-        Assert.That(loaded.State.Reinforcements, Is.EqualTo(3));
-        Assert.That(loaded.State.NextDeck, Is.EqualTo(PlanningDeck.Corrino));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(loaded.State.Reinforcements, Is.EqualTo(3));
+            Assert.That(loaded.State.NextDeck, Is.EqualTo(PlanningDeck.Corrino));
+        }
     }
 
     [Test]
@@ -255,9 +294,12 @@ public class GameFlowTests
 
         game.Execute(new DestroySietch(target, 2));
 
-        Assert.That(game.State.Supremacy, Is.EqualTo(2));
-        Assert.That(game.State.Tactical.TargetCardId, Is.Not.EqualTo(target));
-        Assert.That(game.State.Tactical.DestroyedSietches, Does.Contain(target));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(game.State.Supremacy, Is.EqualTo(2));
+            Assert.That(game.State.Tactical.TargetCardId, Is.Not.EqualTo(target));
+            Assert.That(game.State.Tactical.DestroyedSietches, Does.Contain(target));
+        }
     }
 
     [Test]
@@ -273,9 +315,12 @@ public class GameFlowTests
             }
         }
 
-        Assert.That(game.State.Supremacy, Is.EqualTo(10));
-        Assert.That(game.State.Phase, Is.EqualTo(Phase.GameOver));
-        Assert.That(game.State.Outcome, Is.EqualTo(GameOutcome.HarkonnenVictory));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(game.State.Supremacy, Is.EqualTo(10));
+            Assert.That(game.State.Phase, Is.EqualTo(Phase.GameOver));
+            Assert.That(game.State.Outcome, Is.EqualTo(GameOutcome.HarkonnenVictory));
+        }
         Assert.Throws<CommandRejectedException>(() => game.Execute(new RollHarkonnenDie()));
     }
 
@@ -328,14 +373,17 @@ public class GameFlowTests
 
         var loaded = Game.FromSave(TestGame.Content, SaveData.FromJson(game.ToSave().ToJson()));
 
-        Assert.That(loaded.State.Round, Is.EqualTo(game.State.Round));
-        Assert.That(loaded.State.Supremacy, Is.EqualTo(game.State.Supremacy));
-        Assert.That(loaded.State.Dice.Pending!.Face, Is.EqualTo(game.State.Dice.Pending!.Face));
-        Assert.That(loaded.State.Dice.Pending.Rerolled, Is.EqualTo(game.State.Dice.Pending.Rerolled));
-        Assert.That(loaded.State.Dice.UsedFaces, Is.EqualTo(game.State.Dice.UsedFaces));
-        Assert.That(loaded.State.Tactical.TargetCardId, Is.EqualTo(game.State.Tactical.TargetCardId));
-        Assert.That(loaded.State.Imperium, Is.EquivalentTo(game.State.Imperium));
-        Assert.That(loaded.History, Has.Count.EqualTo(game.History.Count));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(loaded.State.Round, Is.EqualTo(game.State.Round));
+            Assert.That(loaded.State.Supremacy, Is.EqualTo(game.State.Supremacy));
+            Assert.That(loaded.State.Dice.Pending!.Face, Is.EqualTo(game.State.Dice.Pending!.Face));
+            Assert.That(loaded.State.Dice.Pending.Rerolled, Is.EqualTo(game.State.Dice.Pending.Rerolled));
+            Assert.That(loaded.State.Dice.UsedFaces, Is.EqualTo(game.State.Dice.UsedFaces));
+            Assert.That(loaded.State.Tactical.TargetCardId, Is.EqualTo(game.State.Tactical.TargetCardId));
+            Assert.That(loaded.State.Imperium, Is.EquivalentTo(game.State.Imperium));
+            Assert.That(loaded.History, Has.Count.EqualTo(game.History.Count));
+        }
     }
 
     [Test]
