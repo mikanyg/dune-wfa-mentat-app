@@ -24,6 +24,51 @@ permissions:
   pull-requests: write
 
 jobs:
+  # SonarQube Cloud CI-based analysis with engine test coverage (automatic analysis cannot import coverage).
+  # Runs in parallel with the deploy job and never blocks it.
+  sonarcloud:
+    if: github.event_name != 'pull_request' || github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history for accurate new-code detection and blame
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Cache SonarQube Cloud packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Install SonarScanner for .NET
+        run: dotnet tool install --global dotnet-sonarscanner
+
+      - name: Analyze with coverage
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          dotnet sonarscanner begin \
+            /k:"mikanyg_dune-wfa-mentat-app" \
+            /o:"mikanyg" \
+            /d:sonar.token="$SONAR_TOKEN" \
+            /d:sonar.cs.opencover.reportsPaths="tests/**/TestResults/**/coverage.opencover.xml" \
+            /d:sonar.coverage.exclusions="src/Mahdi.App/**"
+          dotnet build DuneMahdiSolo.slnx --no-incremental --disable-build-servers
+          dotnet test tests/Mahdi.Engine.Tests --no-build \
+            --collect "XPlat Code Coverage" \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+          dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
+
   build_test_deploy:
     if: github.event_name != 'pull_request' || github.event.action != 'closed'
     runs-on: ubuntu-latest
