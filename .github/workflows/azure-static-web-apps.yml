@@ -24,8 +24,10 @@ permissions:
   contents: read
 
 jobs:
+  # Pipeline: test and sonarcloud run in parallel; deploy runs only when both have passed.
+
   # SonarQube Cloud CI-based analysis with engine test coverage (automatic analysis cannot import coverage).
-  # Runs in parallel with the deploy job and never blocks it.
+  # Builds and runs the engine unit tests itself, then waits for the quality gate: a failed gate fails the job.
   sonarcloud:
     if: github.event_name != 'pull_request' || github.event.action != 'closed'
     runs-on: ubuntu-latest
@@ -62,19 +64,17 @@ jobs:
             /o:"mikanyg" \
             /d:sonar.token="$SONAR_TOKEN" \
             /d:sonar.cs.opencover.reportsPaths="tests/**/TestResults/**/coverage.opencover.xml" \
-            /d:sonar.coverage.exclusions="src/Mahdi.App/**"
+            /d:sonar.coverage.exclusions="src/Mahdi.App/**" \
+            /d:sonar.qualitygate.wait=true
           dotnet build DuneMahdiSolo.slnx --no-incremental --disable-build-servers
           dotnet test tests/Mahdi.Engine.Tests --no-build \
             --collect "XPlat Code Coverage" \
             -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
           dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
 
-  build_test_deploy:
+  test:
     if: github.event_name != 'pull_request' || github.event.action != 'closed'
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write # Static Web Apps posts the preview URL on pull requests
     steps:
       - uses: actions/checkout@v4
 
@@ -101,6 +101,21 @@ jobs:
           name: e2e-screenshots
           path: tests/Mahdi.App.E2E/bin/Release/net10.0/screenshots
           if-no-files-found: ignore
+
+  # Deploys main to production and pull requests to preview environments, only after tests and the
+  # SonarQube Cloud quality gate have passed.
+  deploy:
+    needs: [test, sonarcloud]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write # Static Web Apps posts the preview URL on pull requests
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
 
       - name: Publish the app
         run: dotnet publish src/Mahdi.App -c Release -o publish
