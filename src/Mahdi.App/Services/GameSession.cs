@@ -3,6 +3,7 @@ using Mahdi.Engine.Commands;
 using Mahdi.Engine.Content;
 using Mahdi.Engine.Guidance;
 using Mahdi.Engine.Model;
+using Mahdi.Engine.Persistence;
 
 namespace Mahdi.App.Services;
 
@@ -13,6 +14,7 @@ namespace Mahdi.App.Services;
 public sealed class GameSession(GameStore store)
 {
     private Task? loading;
+    private Task saving = Task.CompletedTask;
 
     public GameContent Content { get; } = ContentLoader.Default;
 
@@ -87,7 +89,7 @@ public sealed class GameSession(GameStore store)
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             // A save that no longer replays (for example after a rules fix) must not block the app.
-            Console.Error.WriteLine($"Could not restore the saved game: {ex.Message}");
+            await Console.Error.WriteLineAsync($"Could not restore the saved game: {ex.Message}");
             Game = null;
         }
 
@@ -95,18 +97,28 @@ public sealed class GameSession(GameStore store)
         Changed?.Invoke();
     }
 
-    private async void Persist()
+    /// <summary>
+    /// Takes a snapshot now and saves it after any earlier save has finished, so saves never complete
+    /// out of order. Saving never throws; failures are logged.
+    /// </summary>
+    private void Persist()
     {
+        if (Game is not null)
+        {
+            saving = SaveAfterAsync(saving, Game.ToSave());
+        }
+    }
+
+    private async Task SaveAfterAsync(Task previous, SaveData save)
+    {
+        await previous;
         try
         {
-            if (Game is not null)
-            {
-                await store.SaveAsync(Game.ToSave());
-            }
+            await store.SaveAsync(save);
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"Could not save the game: {ex.Message}");
+            await Console.Error.WriteLineAsync($"Could not save the game: {ex.Message}");
         }
     }
 }
