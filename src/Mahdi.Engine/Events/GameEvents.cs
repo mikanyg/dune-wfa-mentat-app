@@ -32,6 +32,9 @@ namespace Mahdi.Engine.Events;
 [JsonDerivedType(typeof(NextDeckSet), "nextDeckSet")]
 [JsonDerivedType(typeof(HawatsSchemingPlayed), "hawatsScheming")]
 [JsonDerivedType(typeof(AtreidesVictoryDeclared), "atreidesVictory")]
+[JsonDerivedType(typeof(BattleStarted), "battleStarted")]
+[JsonDerivedType(typeof(BattleRoundFought), "battleRoundFought")]
+[JsonDerivedType(typeof(BattleEnded), "battleEnded")]
 public abstract record GameEvent;
 
 public sealed record SetupCompleted : GameEvent;
@@ -102,3 +105,17 @@ public sealed record NextDeckSet(PlanningDeck Deck) : GameEvent;
 public sealed record HawatsSchemingPlayed : GameEvent;
 
 public sealed record AtreidesVictoryDeclared : GameEvent;
+
+public sealed record BattleStarted(
+    Attacker Attacker,
+    BattleTarget Target,
+    string? SietchCardId,
+    SettlementKind? Settlement,
+    bool SurpriseAttack) : GameEvent;
+
+/// <summary>A Combat round was fought and the battle continues with the next round.</summary>
+/// <param name="CardsDiscarded">Reinforcements cards discarded in this round.</param>
+public sealed record BattleRoundFought(int CardsDiscarded) : GameEvent;
+
+/// <param name="CardsDiscarded">Reinforcements cards discarded in the final round.</param>
+public sealed record BattleEnded(BattleOutcome Outcome, int CardsDiscarded) : GameEvent;

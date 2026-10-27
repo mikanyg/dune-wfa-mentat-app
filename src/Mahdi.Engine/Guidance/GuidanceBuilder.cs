@@ -383,7 +383,8 @@ public sealed class GuidanceBuilder(GameContent content)
         new($"3. The Legion closest to {TargetName(state)}."),
     ];
 
-    private static ImmutableArray<GuidanceStep> HitPriority() =>
+    /// <summary>Order for applying Hits to a Harkonnen Legion (rulebook p. 41).</summary>
+    public static ImmutableArray<GuidanceStep> HitPriority() =>
     [
         new("1. Eliminate Leaders, Bashar Leaders first, until only 1 Leader remains (a Named one if possible)."),
         new("2. Replace Elite Units with Regular Units."),
