@@ -3,6 +3,7 @@
 @using Mahdi.Engine.Model
 @using Mahdi.Engine.Guidance
 @inject GameSession Session
+@inject HelpService Help
 @implements IDisposable
 
 <PageTitle>@Title · Harkonnen Mentat</PageTitle>
@@ -32,6 +33,7 @@ else
                     <button type="button" class="btn btn-small" data-testid="open-battle" @onclick='() => OpenSheet("battle")'>⚔ Battle</button>
                     <button type="button" class="btn btn-small" data-testid="open-sietch" @onclick='() => OpenSheet("sietch")'>Sietch destroyed</button>
                     <button type="button" class="btn btn-small" data-testid="open-events" @onclick='() => OpenSheet("menu")'>⋯ More events</button>
+                    <button type="button" class="btn btn-small" data-testid="open-combat-power" @onclick="() => Help.Show(HelpTopic.CombatPower)">ⓘ Combat Power</button>
                 </nav>
             }
             @switch (state.Phase)

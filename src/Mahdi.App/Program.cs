@@ -10,5 +10,6 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddScoped<ThemeService>();
 builder.Services.AddScoped<GameStore>();
 builder.Services.AddScoped<GameSession>();
+builder.Services.AddScoped<HelpService>();
 
 await builder.Build().RunAsync();

@@ -1149,6 +1149,124 @@ details[open] > summary::before {
     }
 }
 
+/* ---------- Rules help: term links and the Combat Power sheet ---------- */
+
+.term-link {
+    display: inline;
+    padding: 2px 0;
+    margin: 0;
+    border: none;
+    background: none;
+    font: inherit;
+    color: var(--accent-strong);
+    text-decoration: underline dotted;
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+
+.term-icon {
+    display: inline-block;
+    margin-left: 3px;
+    font-size: 0.85em;
+    text-decoration: none;
+}
+
+/* The help sheet opens above any other sheet. */
+.cp-sheet {
+    z-index: 51;
+}
+
+.cp-sheet ~ .sheet-backdrop,
+.sheet-backdrop:has(+ .cp-sheet) {
+    z-index: 50;
+}
+
+.cp-columns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.cp-block {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.cp-block h3 {
+    font-size: 0.72rem;
+}
+
+.cp-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.cp-table td {
+    padding: 5px 0;
+    border-bottom: 1px dotted var(--rule-soft);
+}
+
+.cp-points {
+    text-align: right;
+    font-family: var(--font-display);
+    font-weight: 700;
+    width: 3ch;
+}
+
+.cp-total td {
+    border-bottom: none;
+    border-top: 2px solid var(--rule);
+    font-weight: 700;
+}
+
+.cp-chips {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.cp-chips li {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 6px 4px 12px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    border: 1px solid var(--rule-soft);
+    font-size: 0.9rem;
+}
+
+.cp-chips strong {
+    display: inline-grid;
+    place-items: center;
+    min-width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--harkonnen);
+    color: #fff;
+    font-family: var(--font-display);
+}
+
+.cp-notes {
+    margin: 0;
+    padding-left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+@media (max-width: 560px) {
+    .cp-columns {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* ==========================================================================
    Responsive
    ========================================================================== */
