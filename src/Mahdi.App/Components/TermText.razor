@@ -9,7 +9,7 @@ else
 {
     @Text[..TermIndex]<button type="button" class="term-link" data-testid="cp-link"
         aria-label="Combat Power: show how it is counted"
-        @onclick="() => Help.Show(HelpTopic.CombatPower)">@Text.Substring(TermIndex, Term.Length)<span class="term-icon" aria-hidden="true">ⓘ</span></button>@Text[(TermIndex + Term.Length)..]
+        @onclick="() => Help.Show(HelpTopic.CombatPower)">@Text.Substring(TermIndex, Term.Length)<Icon Name="Icon.IconName.Info" Class="term-icon" /></button>@Text[(TermIndex + Term.Length)..]
 }
 
 @code {

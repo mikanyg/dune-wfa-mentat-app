@@ -1164,11 +1164,28 @@ details[open] > summary::before {
     cursor: pointer;
 }
 
-.term-icon {
+/* Inline icons sit on the text baseline at the size of the surrounding text. */
+.icon {
     display: inline-block;
+    width: 1em;
+    height: 1em;
+    flex: none;
+    vertical-align: -0.14em;
+}
+
+.quick-actions .btn {
+    gap: 6px;
+}
+
+.quick-actions .icon {
+    width: 1.1em;
+    height: 1.1em;
+}
+
+.term-icon {
+    width: 0.85em;
+    height: 0.85em;
     margin-left: 3px;
-    font-size: 0.85em;
-    text-decoration: none;
 }
 
 /* The help sheet opens above any other sheet. */
