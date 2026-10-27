@@ -229,4 +229,44 @@ public sealed class GameFlowTests(string device) : DeviceTest(device)
             await Expect(ById("target-sietch")).ToBeVisibleAsync();
         }
     }
+
+    [Test]
+    public async Task CombatPowerLinkOnTheDeploymentCardOpensTheHelp()
+    {
+        await StartGameAsync(seed: 21, physicalDice: true);
+        await AdvanceToActionsAsync();
+        await Tap("face-Deployment");
+        await Expect(ById("result-face")).ToHaveTextAsync("Deployment");
+        await SnapshotAsync("deployment-combat-power-link");
+
+        await ById("turn-guidance").GetByTestId("cp-link").First.ClickAsync();
+
+        await Expect(ById("cp-sheet")).ToBeVisibleAsync();
+        await Expect(ById("cp-example-total")).ToHaveTextAsync("7");
+        await Expect(ById("cp-ties")).ToContainTextAsync("Sardaukar or Fedaykin Unit");
+        await SnapshotAsync("combat-power-help");
+
+        await Tap("cp-close");
+        await Expect(ById("cp-sheet")).ToHaveCountAsync(0);
+        await Expect(ById("result-card")).ToBeVisibleAsync();
+    }
+
+    [Test]
+    public async Task CombatPowerHelpIsAvailableFromTheQuickActionsAndTheBattleHelper()
+    {
+        await StartGameAsync(seed: 22);
+        await AdvanceToActionsAsync();
+
+        await Tap("open-combat-power");
+        await Expect(ById("cp-sheet")).ToBeVisibleAsync();
+        await Tap("cp-close");
+        await Expect(ById("cp-sheet")).ToHaveCountAsync(0);
+
+        // The battle helper's notes link to the same help, which opens on top of the event sheet.
+        await Tap("open-battle");
+        await ById("combat-guidance").GetByTestId("cp-link").First.ClickAsync();
+        await Expect(ById("cp-sheet")).ToBeVisibleAsync();
+        await Tap("cp-close");
+        await Expect(ById("event-sheet")).ToBeVisibleAsync();
+    }
 }

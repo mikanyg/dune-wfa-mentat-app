@@ -30,6 +30,9 @@ public abstract class DeviceTest(string device) : PageTest
     /// </summary>
     private const float AppStartTimeoutMs = 120_000;
 
+    /// <summary>Longer than the app's entry animations (sheets slide in for 200 ms).</summary>
+    private const float SettleMs = 400;
+
     protected ILocator ById(string testId) => Page.GetByTestId(testId);
 
     /// <summary>Navigates to a page of the app and waits until Blazor has started.</summary>
@@ -87,6 +90,7 @@ public abstract class DeviceTest(string device) : PageTest
         var folder = Path.Combine(TestContext.CurrentContext.WorkDirectory, "screenshots", Device.Replace(' ', '-'));
         Directory.CreateDirectory(folder);
         var path = Path.Combine(folder, $"{name}.png");
+        await Page.WaitForTimeoutAsync(SettleMs); // let sheet and notice animations finish
         await Page.ScreenshotAsync(new() { Path = path });
         TestContext.AddTestAttachment(path, $"{Device}: {name}");
     }
