@@ -1,8 +1,11 @@
 namespace Mahdi.App.E2E;
 
 /// <summary>Battles fought over several Combat rounds and their outcomes, for both attacking sides.</summary>
-public sealed class BattleFlowTests(string device) : DeviceTest(device)
+public sealed partial class BattleFlowTests(string device) : DeviceTest(device)
 {
+    [GeneratedRegex("in-tank")]
+    private static partial Regex InTankClass();
+
     /// <summary>Starts a Harkonnen turn with the given result (physical dice) and opens the battle sheet.</summary>
     private async Task OpenHarkonnenBattleAsync(int seed, string face = "Strategy")
     {
@@ -180,7 +183,7 @@ public sealed class BattleFlowTests(string device) : DeviceTest(device)
         await Tap("battle-killed-BeastRabban");
         await Tap("battle-confirm");
 
-        await Expect(ById("leader-BeastRabban")).ToHaveClassAsync(new Regex("in-tank"));
+        await Expect(ById("leader-BeastRabban")).ToHaveClassAsync(InTankClass());
     }
 
     [Test]
