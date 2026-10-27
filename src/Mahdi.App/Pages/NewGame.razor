@@ -12,13 +12,13 @@
         <h1>New game</h1>
         <p class="quote">Who casts the Harkonnen dice?</p>
         <div class="mode-tiles" role="radiogroup" aria-label="Dice mode">
-            <button type="button" role="radio" aria-checked="@(mode == DiceMode.AppRolls)" data-testid="mode-app"
+            <button type="button" role="radio" aria-checked="@AriaBool(mode == DiceMode.AppRolls)" data-testid="mode-app"
                     class="mode-tile @(mode == DiceMode.AppRolls ? "selected" : "")" @onclick="() => mode = DiceMode.AppRolls">
                 <span class="mode-icon"><DieIcon Face="DieFace.Strategy" /></span>
                 <span class="mode-title">The app rolls</span>
                 <span class="mode-desc">One tap per Harkonnen turn. Rerolls are handled for you.</span>
             </button>
-            <button type="button" role="radio" aria-checked="@(mode == DiceMode.Physical)" data-testid="mode-physical"
+            <button type="button" role="radio" aria-checked="@AriaBool(mode == DiceMode.Physical)" data-testid="mode-physical"
                     class="mode-tile @(mode == DiceMode.Physical ? "selected" : "")" @onclick="() => mode = DiceMode.Physical">
                 <span class="mode-icon"><DieIcon Face="DieFace.House" /></span>
                 <span class="mode-title">I roll the dice</span>

@@ -1,7 +1,7 @@
 @page "/game"
 @using Mahdi.Engine.Commands
-@using Mahdi.Engine.Model
 @using Mahdi.Engine.Guidance
+@using Mahdi.Engine.Model
 @inject GameSession Session
 @inject HelpService Help
 @implements IDisposable
@@ -30,11 +30,22 @@ else
             @if (state.Phase is not (Phase.Setup or Phase.GameOver))
             {
                 <nav class="quick-actions" aria-label="Game events">
-                    <button type="button" class="btn btn-small" data-testid="open-battle" @onclick='() => OpenSheet("battle")'><Icon Name="Icon.IconName.Battle" />Battle</button>
+                    @if (state.Phase == Phase.ActionResolution || state.Battle is not null)
+                    {
+                        <button type="button" class="btn btn-small" data-testid="open-battle" @onclick='() => OpenSheet("battle")'><Icon Name="Icon.IconName.Battle" />Battle</button>
+                    }
                     <button type="button" class="btn btn-small" data-testid="open-sietch" @onclick='() => OpenSheet("sietch")'>Sietch destroyed</button>
                     <button type="button" class="btn btn-small" data-testid="open-events" @onclick='() => OpenSheet("menu")'><Icon Name="Icon.IconName.More" />More events</button>
                     <button type="button" class="btn btn-small" data-testid="open-combat-power" @onclick="() => Help.Show(HelpTopic.CombatPower)"><Icon Name="Icon.IconName.Info" />Combat Power</button>
                 </nav>
+            }
+            @if (state.Battle is { } battle && sheet != "battle")
+            {
+                <button type="button" class="battle-bar" data-testid="battle-bar" @onclick='() => OpenSheet("battle")'>
+                    <Icon Name="Icon.IconName.Battle" />
+                    <span class="battle-bar-text">Battle · round @battle.Round · @BattleGuidance.Headline(Session.Content, battle) · @state.Reinforcements Reinforcements</span>
+                    <span class="battle-bar-open">Open ▶</span>
+                </button>
             }
             @switch (state.Phase)
             {
@@ -92,9 +103,13 @@ else
         </section>
     </div>
 
-    @if (sheet is not null)
+    @if (sheet == "battle")
     {
-        <EventSheet State="state" StartView="@sheet" OnClose="() => sheet = null" />
+        <BattleSheet State="state" OnClose="() => sheet = null" />
+    }
+    else if (sheet is not null)
+    {
+        <EventSheet State="state" StartView="@sheet" OnClose="() => sheet = null" OnOpenBattle='() => sheet = "battle"' />
     }
 }
 

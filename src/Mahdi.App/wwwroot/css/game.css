@@ -1117,23 +1117,148 @@ details[open] > summary::before {
     color: var(--harkonnen);
 }
 
-.combat-helper {
+/* ---------- Battle sheet and bar ---------- */
+
+.battle-sheet {
+    max-height: min(92dvh, 860px);
+}
+
+.battle-sheet h3 {
+    font-size: 0.72rem;
+    margin-bottom: 6px;
+}
+
+.battle-attacker {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 1.1rem;
+}
+
+.battle-attacker .icon {
+    color: var(--harkonnen);
+}
+
+.switch-attacker {
+    margin-left: auto;
+    color: var(--accent-strong);
+}
+
+.battle-headline {
+    font-size: 1.15rem;
+    font-weight: 600;
+}
+
+.battle-steps {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: battle-step;
     display: flex;
     flex-direction: column;
     gap: 14px;
 }
 
-.combat-result {
-    font-size: 1.15rem;
+.battle-steps > li {
+    counter-increment: battle-step;
+    position: relative;
+    padding-left: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
-/* Keep the battle decision buttons reachable while the Hits notes scroll underneath. */
-.combat-helper .button-row {
-    position: sticky;
-    bottom: 0;
-    z-index: 2;
-    padding: 6px 0;
-    background: var(--surface);
+.battle-steps > li::before {
+    content: counter(battle-step);
+    position: absolute;
+    left: 0;
+    top: -4px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    background: var(--accent);
+    color: var(--accent-contrast);
+}
+
+.battle-discard {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.battle-discard .icon-btn {
+    width: 52px;
+    height: 52px;
+    font-size: 1.5rem;
+    border-color: var(--rule);
+    background: var(--surface-2);
+}
+
+.battle-discard .icon-btn:disabled {
+    opacity: 0.35;
+}
+
+.battle-outcomes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 8px;
+}
+
+.battle-outcomes .btn {
+    font-family: var(--font-body);
+    letter-spacing: 0;
+    min-height: 52px;
+}
+
+.battle-notes {
+    margin: 0;
+    padding-left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.88rem;
+    color: var(--text-muted);
+}
+
+.battle-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 48px;
+    padding: 8px 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--harkonnen);
+    background: var(--harkonnen-soft);
+    color: var(--text);
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+}
+
+.battle-bar .icon {
+    color: var(--harkonnen);
+    width: 1.2em;
+    height: 1.2em;
+}
+
+.battle-bar-text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.battle-bar-open {
+    color: var(--accent-strong);
+    font-family: var(--font-display);
+    font-weight: 700;
 }
 
 @keyframes fade-in {
@@ -1498,9 +1623,13 @@ details[open] > summary::before {
         grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 
-    .combat-helper .btn-big {
-        min-height: 48px;
-        font-size: 0.95rem;
+    .battle-outcomes {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    }
+
+    .battle-outcomes .btn {
+        min-height: 44px;
+        font-size: 0.9rem;
     }
 
     .hero {
