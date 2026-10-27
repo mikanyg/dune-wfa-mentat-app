@@ -1,0 +1,15 @@
+@inject HelpService Help
+@implements IDisposable
+
+@if (Help.Current == HelpTopic.CombatPower)
+{
+    <CombatPowerSheet OnClose="Help.Close" />
+}
+
+@code {
+    protected override void OnInitialized() => Help.Changed += OnChanged;
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Help.Changed -= OnChanged;
+}

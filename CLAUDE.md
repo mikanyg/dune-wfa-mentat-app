@@ -23,6 +23,7 @@ The app **cannot see the board**. It owns everything off the map (dice, Tactical
   - `GameStore` wraps localStorage. `ThemeService` and `wwwroot/js/app.js` handle the theme, applied before Blazor starts.
   - Pages: `Home`, `NewGame` (dice mode; `?seed=` honoured only outside Production), `GamePage` (switches on `Phase`), `Reference`.
   - Components: `WarTable`, `StateRail` (collapses to an icon strip on short landscape screens), `EventSheet`, `CombatHelper`, `FacePicker`, `GuidanceCard`, `SpicePanel`, `TacticalCards`, `DieIcon` (original glyphs, no game art).
+  - Rules help: `HelpService` opens a help sheet hosted by `MainLayout` (`HelpSheetHost`). `TermText` turns the first "Combat Power" in any guidance text into a link to `CombatPowerSheet`, whose content is `Guidance/CombatPowerHelp.cs` in the engine; the War Table quick actions also have a Combat Power button.
   - CSS: `wwwroot/css/app.css` (theme tokens for light "Desert Parchment" and dark "Arrakis Night", base styles, buttons, shell) and `wwwroot/css/game.css` (screens and responsive rules). Short landscape phones use `@media (max-height: 520px)`.
 - `tests/Mahdi.Engine.Tests`: NUnit unit tests.
 - `tests/Mahdi.App.E2E`: Playwright + NUnit, WebKit, fixtures for "iPad Pro 11 landscape" and "iPhone 15 Pro landscape" (`DeviceTest`). `AppServer` publishes the app with `-p:WasmApplicationEnvironmentName=Test` and serves it with an index.html fallback.

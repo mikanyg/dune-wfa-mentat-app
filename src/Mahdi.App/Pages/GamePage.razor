@@ -3,6 +3,7 @@
 @using Mahdi.Engine.Model
 @using Mahdi.Engine.Guidance
 @inject GameSession Session
+@inject HelpService Help
 @implements IDisposable
 
 <PageTitle>@Title · Harkonnen Mentat</PageTitle>
@@ -29,9 +30,10 @@ else
             @if (state.Phase is not (Phase.Setup or Phase.GameOver))
             {
                 <nav class="quick-actions" aria-label="Game events">
-                    <button type="button" class="btn btn-small" data-testid="open-battle" @onclick='() => OpenSheet("battle")'>⚔ Battle</button>
+                    <button type="button" class="btn btn-small" data-testid="open-battle" @onclick='() => OpenSheet("battle")'><Icon Name="Icon.IconName.Battle" />Battle</button>
                     <button type="button" class="btn btn-small" data-testid="open-sietch" @onclick='() => OpenSheet("sietch")'>Sietch destroyed</button>
-                    <button type="button" class="btn btn-small" data-testid="open-events" @onclick='() => OpenSheet("menu")'>⋯ More events</button>
+                    <button type="button" class="btn btn-small" data-testid="open-events" @onclick='() => OpenSheet("menu")'><Icon Name="Icon.IconName.More" />More events</button>
+                    <button type="button" class="btn btn-small" data-testid="open-combat-power" @onclick="() => Help.Show(HelpTopic.CombatPower)"><Icon Name="Icon.IconName.Info" />Combat Power</button>
                 </nav>
             }
             @switch (state.Phase)

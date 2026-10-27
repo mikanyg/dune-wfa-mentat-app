@@ -1,0 +1,22 @@
+@inject HelpService Help
+
+@* Renders instruction text with the first mention of a rules term turned into a link that opens its help sheet. *@
+@if (TermIndex < 0)
+{
+    @Text
+}
+else
+{
+    @Text[..TermIndex]<button type="button" class="term-link" data-testid="cp-link"
+        aria-label="Combat Power: show how it is counted"
+        @onclick="() => Help.Show(HelpTopic.CombatPower)">@Text.Substring(TermIndex, Term.Length)<Icon Name="Icon.IconName.Info" Class="term-icon" /></button>@Text[(TermIndex + Term.Length)..]
+}
+
+@code {
+    private const string Term = "Combat Power";
+
+    [Parameter, EditorRequired]
+    public string Text { get; set; } = string.Empty;
+
+    private int TermIndex => Text.IndexOf(Term, StringComparison.Ordinal);
+}

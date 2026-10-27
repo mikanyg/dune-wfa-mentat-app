@@ -1,0 +1,56 @@
+@using Mahdi.Engine.Guidance
+
+@* Combat Power rules help (rulebook p. 39), opened from "Combat Power" links and the quick-action button. *@
+<div class="sheet-backdrop" data-testid="cp-backdrop" @onclick="OnClose"></div>
+<section class="sheet cp-sheet" role="dialog" aria-modal="true" aria-label="Combat Power" data-testid="cp-sheet">
+    <header class="sheet-head">
+        <h2>Combat Power</h2>
+        <button type="button" class="icon-btn" data-testid="cp-close" aria-label="Close" @onclick="OnClose">×</button>
+    </header>
+    <div class="sheet-body">
+        <div class="cp-columns">
+            <section class="cp-block" data-testid="cp-counting">
+                <h3>Count the Legion</h3>
+                <table class="cp-table">
+                    @foreach (var row in Help.Counting)
+                    {
+                        <tr><td>@row.Label</td><td class="cp-points">@row.Points</td></tr>
+                    }
+                </table>
+            </section>
+            <section class="cp-block" data-testid="cp-example">
+                <h3>Example</h3>
+                <table class="cp-table">
+                    @foreach (var row in Help.Example)
+                    {
+                        <tr><td>@row.Label</td><td class="cp-points">@row.Points</td></tr>
+                    }
+                    <tr class="cp-total"><td>Combat Power</td><td class="cp-points" data-testid="cp-example-total">@Help.ExampleTotal</td></tr>
+                </table>
+            </section>
+        </div>
+        <section class="cp-block" data-testid="cp-ties">
+            <h3>On a tie, or when single Units are compared</h3>
+            <ul class="cp-chips">
+                @foreach (var row in Help.TieValues)
+                {
+                    <li><span>@row.Label</span><strong>@row.Points</strong></li>
+                }
+            </ul>
+        </section>
+        <ul class="cp-notes">
+            @foreach (var note in Help.Notes)
+            {
+                <li>@note</li>
+            }
+        </ul>
+        <p class="rule-ref">@Help.RuleReference</p>
+    </div>
+</section>
+
+@code {
+    private static CombatPowerHelp Help => CombatPowerHelp.Rules;
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+}

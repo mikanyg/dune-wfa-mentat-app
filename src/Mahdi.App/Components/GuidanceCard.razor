@@ -7,7 +7,7 @@
     }
     @if (!string.IsNullOrEmpty(Guidance.Headline))
     {
-        <p class="guidance-headline" data-testid="guidance-headline">@Guidance.Headline</p>
+        <p class="guidance-headline" data-testid="guidance-headline"><TermText Text="@Guidance.Headline" /></p>
     }
     @if (!Guidance.Steps.IsEmpty)
     {
@@ -19,7 +19,7 @@
             @foreach (var step in Guidance.Steps)
             {
                 <li>
-                    <span class="step-text">@step.Text</span>
+                    <span class="step-text"><TermText Text="@step.Text" /></span>
                     @if (!step.Details.IsEmpty)
                     {
                         <details class="step-details">
@@ -27,7 +27,7 @@
                             <ul>
                                 @foreach (var detail in step.Details)
                                 {
-                                    <li>@detail</li>
+                                    <li><TermText Text="@detail" /></li>
                                 }
                             </ul>
                         </details>
@@ -43,7 +43,7 @@
             <ul>
                 @foreach (var note in Guidance.Notes)
                 {
-                    <li>@note</li>
+                    <li><TermText Text="@note" /></li>
                 }
             </ul>
             @if (Guidance.RuleReference is { } reference)
