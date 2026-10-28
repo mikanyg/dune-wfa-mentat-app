@@ -37,6 +37,9 @@ public sealed record GameState
 
     public SpiceResult? LastSpiceResult { get; init; }
 
+    /// <summary>The battle being fought, if any.</summary>
+    public BattleState? Battle { get; init; }
+
     public GameOutcome? Outcome { get; init; }
 
     /// <summary>Messages raised by the most recent command (Leader entries, Bans, reminders).</summary>

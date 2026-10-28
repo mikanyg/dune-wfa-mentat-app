@@ -176,6 +176,26 @@ public static class CommandHandler
                 batch.Emit(new AtreidesVictoryDeclared());
                 break;
 
+            case StartBattle x:
+                StartBattle(content, state, x, batch);
+                break;
+
+            case FightBattleRound x:
+                _ = RequireBattle(state);
+                DiscardForBattle(state, x.Discard, x.LastDiscardedFrom, batch);
+                batch.Emit(new BattleRoundFought(x.Discard));
+                break;
+
+            case EndBattle x:
+                EndBattle(content, state, x, random, batch);
+                break;
+
+            case CancelBattle:
+                var open = RequireBattle(state);
+                Require(open.Round == 1 && open.CardsDiscarded == 0, "Combat rounds were fought: choose how the battle ended.");
+                batch.Emit(new BattleEnded(BattleOutcome.Cancelled, 0));
+                break;
+
             default:
                 throw new ArgumentOutOfRangeException(nameof(command), command.GetType().Name, "Unknown command.");
         }
@@ -191,6 +211,81 @@ public static class CommandHandler
             LeaderRules.SpecialLeaderFor(content, state, face),
             face == DieFace.Deployment ? LeaderRules.DeployCandidates(content, state).Cast<LeaderId?>().FirstOrDefault() : null,
             state.NextDeck);
+
+    private static void StartBattle(GameContent content, GameState state, StartBattle x, Batch batch)
+    {
+        Require(state.Phase == Phase.ActionResolution, "Battles are fought during Action Resolution.");
+        Require(state.Battle is null, "A battle is already being fought.");
+        Require(BattleRules.Targets(x.Attacker).Contains(x.Target), $"The {x.Attacker} cannot attack that target.");
+
+        if (x.Target == BattleTarget.Sietch)
+        {
+            Require(x.SietchCardId is { } id && content.TacticalCards.Any(c => c.Id == id), "Choose the attacked Sietch.");
+            Require(!state.Tactical.DestroyedSietches.Contains(x.SietchCardId!), "That Sietch is already destroyed.");
+        }
+        else
+        {
+            Require(x.SietchCardId is null, "Only a Sietch target names a Sietch.");
+        }
+
+        Require((x.Target == BattleTarget.Settlement) == (x.Settlement is not null), "Choose the attacked Settlement.");
+
+        var surprise = x.Attacker == Attacker.Harkonnen && state.Dice.Pending is { Face: DieFace.Leadership };
+        batch.Emit(new BattleStarted(x.Attacker, x.Target, x.SietchCardId, x.Settlement, surprise));
+    }
+
+    private static void EndBattle(GameContent content, GameState state, EndBattle x, IRandomSource random, Batch batch)
+    {
+        var battle = RequireBattle(state);
+        Require(x.Outcome != BattleOutcome.Cancelled && BattleRules.Outcomes(battle.Attacker).Contains(x.Outcome),
+            "That outcome is not possible for this attacker.");
+
+        var sietchFalls = BattleRules.SietchFalls(battle, x.Outcome);
+        Require(sietchFalls ? x.SietchRank is >= 1 and <= 3 : x.SietchRank is null,
+            sietchFalls ? "Choose the rank of the destroyed Sietch." : "No Sietch falls in this outcome.");
+
+        var killed = x.KilledLeaders ?? [];
+        Require(killed.Distinct().Count() == killed.Count && killed.All(l => state.Leaders[l].Status == LeaderStatus.OnBoard),
+            "Only Named Leaders on the board can be killed.");
+
+        DiscardForBattle(state, x.Discard, x.LastDiscardedFrom, batch);
+        batch.Emit(new BattleEnded(x.Outcome, x.Discard));
+
+        if (sietchFalls && battle.SietchCardId is { } sietch)
+        {
+            batch.Emit(new SietchDestroyed(sietch, x.SietchRank!.Value));
+            if (sietch == state.Tactical.TargetCardId && batch.State.Phase != Phase.GameOver)
+            {
+                batch.Emit(TacticalDeck.RedrawTarget(content, batch.State, random));
+            }
+        }
+
+        // A destroyed Sietch can end the game (Supremacy 10); casualties no longer matter then.
+        if (batch.State.Phase != Phase.GameOver)
+        {
+            foreach (var leader in killed)
+            {
+                batch.Emit(new LeaderKilled(leader));
+            }
+        }
+    }
+
+    private static void DiscardForBattle(GameState state, int discard, PlanningDeck? lastDiscardedFrom, Batch batch)
+    {
+        if (discard == 0)
+        {
+            return;
+        }
+
+        Require(!state.IsBanActive(ImperiumPower.Landsraad),
+            "The Landsraad Ban is active: Reinforcements cannot be discarded for Combat dice.");
+        Require(discard > 0 && discard <= state.Reinforcements, "Not enough Reinforcements cards.");
+        Require(lastDiscardedFrom is not null, "Choose the deck of the last card discarded.");
+        batch.Emit(new ReinforcementsDiscarded(discard, lastDiscardedFrom));
+    }
+
+    private static BattleState RequireBattle(GameState state) =>
+        state.Battle ?? throw new CommandRejectedException("No battle is being fought.");
 
     private static void RequireTurnCanStart(GameState state)
     {

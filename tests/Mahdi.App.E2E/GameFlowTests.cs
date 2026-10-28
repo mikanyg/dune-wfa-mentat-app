@@ -122,25 +122,6 @@ public sealed class GameFlowTests(string device) : DeviceTest(device)
     }
 
     [Test]
-    public async Task BattleHelperDiscardsReinforcementsUpToSixDice()
-    {
-        await StartGameAsync(seed: 15);
-        await AdvanceToActionsAsync();
-        await Expect(ById("reinforcements")).ToHaveAttributeAsync("data-count", "2");
-
-        await Tap("open-battle");
-        await Tap("combat-dice-5");
-        await Expect(ById("combat-discard")).ToHaveAttributeAsync("data-count", "1");
-        await SnapshotAsync("battle");
-        await Tap("combat-apply-Harkonnen");
-
-        await Expect(ById("reinforcements")).ToHaveAttributeAsync("data-count", "1");
-
-        // A House Harkonnen card is now on top of the discard pile, so the next draw starts from Corrino.
-        await Expect(ById("next-deck")).ToContainTextAsync("Corrino");
-    }
-
-    [Test]
     public async Task AddingReinforcementsShowsTheDeckOrderAndKeepsTheNextDeck()
     {
         await StartGameAsync(seed: 20);
@@ -252,7 +233,7 @@ public sealed class GameFlowTests(string device) : DeviceTest(device)
     }
 
     [Test]
-    public async Task CombatPowerHelpIsAvailableFromTheQuickActionsAndTheBattleHelper()
+    public async Task CombatPowerHelpIsAvailableFromTheQuickActionsAndTheBattleSheet()
     {
         await StartGameAsync(seed: 22);
         await AdvanceToActionsAsync();
@@ -262,11 +243,14 @@ public sealed class GameFlowTests(string device) : DeviceTest(device)
         await Tap("cp-close");
         await Expect(ById("cp-sheet")).ToHaveCountAsync(0);
 
-        // The battle helper's notes link to the same help, which opens on top of the event sheet.
+        // A Harkonnen attack's battle notes link to the same help, which opens on top of the battle sheet.
         await Tap("open-battle");
-        await ById("combat-guidance").GetByTestId("cp-link").First.ClickAsync();
+        await Tap("battle-switch-attacker");
+        await Tap("battle-target-AtreidesLegion");
+        await Tap("battle-begin");
+        await ById("battle-sheet").GetByTestId("cp-link").First.ClickAsync();
         await Expect(ById("cp-sheet")).ToBeVisibleAsync();
         await Tap("cp-close");
-        await Expect(ById("event-sheet")).ToBeVisibleAsync();
+        await Expect(ById("battle-sheet")).ToBeVisibleAsync();
     }
 }

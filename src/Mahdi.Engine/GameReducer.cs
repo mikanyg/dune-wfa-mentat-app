@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using Mahdi.Engine.Events;
 using Mahdi.Engine.Model;
+using Mahdi.Engine.Rules;
 
 namespace Mahdi.Engine;
 
@@ -67,6 +68,14 @@ public static class GameReducer
             : Notify(state with { HawatsSchemingOnTable = true }, NoticeKind.Info,
                 "First Hawat's Scheming: place it next to the board. It has no effect until a second one is played."),
         AtreidesVictoryDeclared => state with { Outcome = GameOutcome.AtreidesVictory, Phase = Phase.GameOver },
+        BattleStarted x => state with
+        {
+            Battle = new BattleState(x.Attacker, x.Target, x.SietchCardId, x.Settlement, x.SurpriseAttack, 1, 0),
+        },
+        BattleRoundFought x => state.Battle is { } battle
+            ? state with { Battle = battle with { Round = battle.Round + 1, CardsDiscarded = battle.CardsDiscarded + x.CardsDiscarded } }
+            : state,
+        BattleEnded x => EndBattle(state, x),
         _ => throw new ArgumentOutOfRangeException(nameof(e), e.GetType().Name, "Unknown event."),
     };
 
@@ -322,6 +331,43 @@ public static class GameReducer
 
         return next;
     }
+
+    private static GameState EndBattle(GameState state, BattleEnded x)
+    {
+        var battle = state.Battle;
+        var next = state with { Battle = null };
+        if (battle is null || x.Outcome == BattleOutcome.Cancelled)
+        {
+            return next;
+        }
+
+        if (BattleRules.SettlementFalls(battle, x.Outcome) && battle.Settlement is { } settlement)
+        {
+            var name = SettlementName(settlement);
+            next = Notify(next, NoticeKind.Important,
+                $"{name} is destroyed: advance every Prescience marker by its rank ({BattleRules.SettlementRank(settlement)}).");
+            if (settlement == SettlementKind.Arrakeen)
+            {
+                next = Notify(next, NoticeKind.Important,
+                    "Arrakeen has fallen: check your Secret Objective now. If it is met, the Atreides win immediately (FAQ).");
+            }
+        }
+
+        if (BattleRules.AttackerWins(x.Outcome))
+        {
+            next = Notify(next, NoticeKind.Info, "The winning Legion may advance into the attacked Area or stay where it is (FAQ).");
+        }
+
+        return next;
+    }
+
+    public static string SettlementName(SettlementKind settlement) => settlement switch
+    {
+        SettlementKind.PyonVillage => "The Pyon Village",
+        SettlementKind.Carthag => "Carthag",
+        SettlementKind.Arrakeen => "Arrakeen",
+        _ => settlement.ToString(),
+    };
 
     private static GameState KillLeader(GameContent content, GameState state, LeaderId id) =>
         Notify(state with

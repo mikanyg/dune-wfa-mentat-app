@@ -6,7 +6,7 @@
 
 @* The automa's state at a glance. On short landscape screens it collapses to an icon strip. *@
 <aside class="rail @(open ? "open" : "")" data-testid="state-rail">
-    <button class="rail-strip" type="button" data-testid="rail-toggle" aria-expanded="@open"
+    <button class="rail-strip" type="button" data-testid="rail-toggle" aria-expanded="@AriaBool(open)"
             aria-label="@(open ? "Hide Harkonnen status" : "Show Harkonnen status")" @onclick="() => open = !open">
         <span class="strip-item" title="Unused Harkonnen dice"><span class="strip-dot"></span>@State.Dice.Unused</span>
         <span class="strip-item" title="Reinforcements"><span class="strip-card"></span>@State.Reinforcements</span>
@@ -107,7 +107,7 @@
                     var ls = State.Leaders[leader.Id];
                     <li class="leader @StatusClass(ls)" data-testid="leader-@leader.Id">
                         <button type="button" class="leader-chip" @onclick="() => ToggleLeader(leader.Id)"
-                                aria-expanded="@(selectedLeader == leader.Id)">
+                                aria-expanded="@AriaBool(selectedLeader == leader.Id)">
                             <DieIcon Face="leader.Face" Class="leader-face" />
                             <span class="leader-name">@leader.Name</span>
                             <span class="leader-status">@StatusText(ls)</span>

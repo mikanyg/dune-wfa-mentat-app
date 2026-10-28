@@ -54,4 +54,28 @@ public sealed record PlayHawatsScheming : GameCommand;
 
 public sealed record DeclareAtreidesVictory : GameCommand;
 
+public sealed record StartBattle(
+    Attacker Attacker,
+    BattleTarget Target,
+    string? SietchCardId = null,
+    SettlementKind? Settlement = null) : GameCommand;
+
+/// <summary>The current Combat round is over and the battle continues.</summary>
+/// <param name="Discard">Reinforcements cards the Harkonnens discarded this round for Combat dice.</param>
+/// <param name="LastDiscardedFrom">Deck of the last card discarded; required when <paramref name="Discard"/> is above 0.</param>
+public sealed record FightBattleRound(int Discard = 0, PlanningDeck? LastDiscardedFrom = null) : GameCommand;
+
+/// <summary>Ends the battle after its final round.</summary>
+/// <param name="SietchRank">Rank of the Sietch the Harkonnens destroyed; required when a Sietch falls.</param>
+/// <param name="KilledLeaders">Harkonnen Named Leaders killed in the battle (they go to the Regeneration Tank).</param>
+public sealed record EndBattle(
+    BattleOutcome Outcome,
+    int Discard = 0,
+    PlanningDeck? LastDiscardedFrom = null,
+    int? SietchRank = null,
+    IReadOnlyList<LeaderId>? KilledLeaders = null) : GameCommand;
+
+/// <summary>Closes a battle opened by mistake, before any round was fought.</summary>
+public sealed record CancelBattle : GameCommand;
+
 public sealed class CommandRejectedException(string message) : InvalidOperationException(message);

@@ -1,0 +1,353 @@
+@using Mahdi.Engine.Commands
+@using Mahdi.Engine.Guidance
+@using Mahdi.Engine.Model
+@using Mahdi.Engine.Rules
+@inject GameSession Session
+
+@* A battle from start to finish: who attacks what, each Combat round (Reinforcements discards, Hits order)
+   and the outcome with its consequences. The open battle lives in the game state; this sheet only holds the
+   choices of the current round. *@
+<div class="sheet-backdrop" data-testid="battle-backdrop" @onclick="OnClose"></div>
+<section class="sheet battle-sheet" role="dialog" aria-modal="true" aria-label="Battle" data-testid="battle-sheet">
+    <header class="sheet-head">
+        <h2 data-testid="battle-title">@Title</h2>
+        @if (Battle is not null)
+        {
+            <button type="button" class="icon-btn" data-testid="battle-minimise" aria-label="Minimise the battle" title="Minimise" @onclick="OnClose">–</button>
+        }
+        <button type="button" class="icon-btn" data-testid="battle-close" aria-label="Close" @onclick="OnClose">×</button>
+    </header>
+
+    <div class="sheet-body">
+        @if (Battle is null)
+        {
+            @StartView
+        }
+        else if (outcome is { } chosen)
+        {
+            @ResultView(Battle, chosen)
+        }
+        else
+        {
+            @RoundView(Battle)
+        }
+    </div>
+</section>
+
+@code {
+    private Attacker attacker;
+    private BattleTarget target;
+    private string? sietch;
+    private SettlementKind? settlement;
+
+    private int? units;
+    private int discard;
+    private PlanningDeck? lastDeck;
+    private BattleOutcome? outcome;
+    private int? sietchRank;
+    private readonly HashSet<LeaderId> killed = [];
+    private int shownRound;
+
+    [Parameter, EditorRequired]
+    public GameState State { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    private BattleState? Battle => State.Battle;
+
+    private string Title => Battle is { } battle
+        ? $"Battle · Round {battle.Round}"
+        : "Battle";
+
+    protected override void OnInitialized() => ResetStart(BattleRules.DefaultAttacker(State));
+
+    protected override void OnParametersSet()
+    {
+        // A new round (or an undo) starts with fresh round choices.
+        if (Battle is { } battle && battle.Round != shownRound)
+        {
+            shownRound = battle.Round;
+            ResetRound();
+        }
+    }
+
+    private void ResetStart(Attacker side)
+    {
+        attacker = side;
+        target = BattleRules.Targets(side)[0];
+        sietch = State.Tactical.TargetCardId is { } id && !State.Tactical.DestroyedSietches.Contains(id) ? id : null;
+        settlement = null;
+    }
+
+    private void ResetRound()
+    {
+        units = null;
+        discard = 0;
+        lastDeck = null;
+        outcome = null;
+        sietchRank = null;
+        killed.Clear();
+    }
+
+    private bool CanBegin => target switch
+    {
+        BattleTarget.Sietch => sietch is not null,
+        BattleTarget.Settlement => settlement is not null,
+        _ => true,
+    };
+
+    private bool LandsraadBan => State.IsBanActive(ImperiumPower.Landsraad);
+
+    private bool DiscardReady => discard == 0 || lastDeck is not null;
+
+    private void Begin() => Session.Execute(new StartBattle(
+        attacker,
+        target,
+        target == BattleTarget.Sietch ? sietch : null,
+        target == BattleTarget.Settlement ? settlement : null));
+
+    private void ChooseUnits(BattleState battle, int count)
+    {
+        units = count;
+        discard = BattleRules.SuggestedDiscard(State, BattleRules.HarkonnenDiceBeforeCards(battle, count));
+        lastDeck = null;
+    }
+
+    private void NextRound() => Session.Execute(new FightBattleRound(discard, discard > 0 ? lastDeck : null));
+
+    private void ToggleKilled(LeaderId leader)
+    {
+        if (!killed.Remove(leader))
+        {
+            killed.Add(leader);
+        }
+    }
+
+    private async Task Confirm(BattleState battle, BattleOutcome chosen)
+    {
+        var rank = BattleRules.SietchFalls(battle, chosen) ? sietchRank : null;
+        if (Session.Execute(new EndBattle(chosen, discard, discard > 0 ? lastDeck : null, rank, [.. killed])))
+        {
+            await OnClose.InvokeAsync();
+        }
+    }
+
+    private string SietchName(string id) => Session.Content.Card(id).Sietch;
+
+    private RenderFragment StartView => __builder =>
+    {
+        <p class="battle-attacker" data-testid="battle-attacker" data-attacker="@attacker">
+            <Icon Name="Icon.IconName.Battle" /> <strong>@BattleGuidance.AttackerName(attacker) attack</strong>
+            @if (attacker == Attacker.Harkonnen && State.Dice.Pending is { } turn)
+            {
+                <span class="muted"> (Harkonnen turn @(State.Dice.TurnsTaken + 1) · @GuidanceBuilder.FaceName(turn.Face))</span>
+            }
+            <button type="button" class="btn btn-ghost btn-small switch-attacker" data-testid="battle-switch-attacker"
+                    @onclick="() => ResetStart(attacker == Attacker.Harkonnen ? Attacker.Atreides : Attacker.Harkonnen)">
+                Switch attacker
+            </button>
+        </p>
+
+        <h3>Target</h3>
+        <div class="choice-grid">
+            @foreach (var option in BattleRules.Targets(attacker))
+            {
+                var t = option;
+                <button type="button" class="choice @(target == t ? "selected" : "")" data-testid="battle-target-@t"
+                        aria-pressed="@AriaBool(target == t)" @onclick="() => target = t">@BattleGuidance.TargetName(t)</button>
+            }
+        </div>
+
+        @if (target == BattleTarget.Sietch)
+        {
+            <h3>Which Sietch?</h3>
+            <div class="choice-grid">
+                @foreach (var card in Session.Content.TacticalCards.Where(c => !State.Tactical.DestroyedSietches.Contains(c.Id)))
+                {
+                    var id = card.Id;
+                    <button type="button" class="choice @(sietch == id ? "selected" : "")" data-testid="battle-sietch-@id"
+                            aria-pressed="@AriaBool(sietch == id)" @onclick="() => sietch = id">
+                        @card.Sietch
+                        @if (id == State.Tactical.TargetCardId)
+                        {
+                            <span class="choice-tag">Target</span>
+                        }
+                    </button>
+                }
+            </div>
+        }
+        else if (target == BattleTarget.Settlement)
+        {
+            <h3>Which Settlement? <span class="muted">(its rank adds Harkonnen Combat dice)</span></h3>
+            <div class="choice-grid">
+                @foreach (var kind in Enum.GetValues<SettlementKind>())
+                {
+                    var k = kind;
+                    <button type="button" class="choice @(settlement == k ? "selected" : "")" data-testid="battle-settlement-@k"
+                            aria-pressed="@AriaBool(settlement == k)" @onclick="() => settlement = k">
+                        @BattleGuidance.SettlementLabel(k) <span class="choice-tag">rank @BattleRules.SettlementRank(k)</span>
+                    </button>
+                }
+            </div>
+        }
+
+        <p class="muted">Reinforcements: @State.Reinforcements card@(State.Reinforcements == 1 ? "" : "s")@(LandsraadBan ? " · Landsraad Ban: no discards" : "")</p>
+        <button type="button" class="btn btn-primary btn-big" data-testid="battle-begin" disabled="@(!CanBegin)" @onclick="Begin">Begin round 1 ▶</button>
+    };
+
+    private RenderFragment RoundView(BattleState battle) => __builder =>
+    {
+        <p class="battle-headline" data-testid="battle-headline">@BattleGuidance.Headline(Session.Content, battle)</p>
+
+        <ol class="battle-steps">
+            <li>
+                <h3>Harkonnen Units in the battle <span class="muted">(not Leaders)</span></h3>
+                <div class="choice-grid dice-count">
+                    @for (var count = 1; count <= BattleRules.MaxCombatDice; count++)
+                    {
+                        var c = count;
+                        <button type="button" class="choice rank @(units == c ? "selected" : "")" data-testid="battle-units-@c"
+                                aria-pressed="@AriaBool(units == c)" @onclick="() => ChooseUnits(battle, c)">@c</button>
+                    }
+                </div>
+                @if (units is { } chosenUnits)
+                {
+                    var dice = BattleRules.HarkonnenDiceBeforeCards(battle, chosenUnits);
+                    <p class="muted" data-testid="battle-dice" data-count="@dice">
+                        @dice Combat dice before cards@(battle.Settlement is { } s && battle.Attacker == Attacker.Atreides ? $" (incl. {BattleGuidance.SettlementLabel(s)} rank {BattleRules.SettlementRank(s)})" : "").
+                    </p>
+                }
+            </li>
+            <li>
+                <h3>Discard Reinforcements</h3>
+                @if (LandsraadBan)
+                {
+                    <p class="warning-text">Landsraad Ban: no Reinforcements cards may be discarded for Combat dice.</p>
+                }
+                else
+                {
+                    <div class="battle-discard">
+                        <button type="button" class="icon-btn" data-testid="battle-discard-minus" aria-label="Discard one card fewer"
+                                disabled="@(discard == 0)" @onclick="() => discard--">−</button>
+                        <span class="counter-value" data-testid="battle-discard" data-count="@discard">@discard</span>
+                        <button type="button" class="icon-btn" data-testid="battle-discard-plus" aria-label="Discard one card more"
+                                disabled="@(discard >= State.Reinforcements)" @onclick="() => discard++">+</button>
+                        <span class="muted">of @State.Reinforcements · up to 6 dice suggested</span>
+                    </div>
+                    @if (discard > 0)
+                    {
+                        <p class="sheet-lead">Last card discarded:</p>
+                        <div class="choice-grid">
+                            <button type="button" class="choice @(lastDeck == PlanningDeck.Harkonnen ? "selected" : "")" data-testid="battle-last-Harkonnen"
+                                    aria-pressed="@AriaBool(lastDeck == PlanningDeck.Harkonnen)" @onclick="() => lastDeck = PlanningDeck.Harkonnen">House Harkonnen</button>
+                            <button type="button" class="choice @(lastDeck == PlanningDeck.Corrino ? "selected" : "")" data-testid="battle-last-Corrino"
+                                    aria-pressed="@AriaBool(lastDeck == PlanningDeck.Corrino)" @onclick="() => lastDeck = PlanningDeck.Corrino">Corrino Ally</button>
+                        </div>
+                    }
+                }
+            </li>
+            <li>
+                <h3>Roll, then apply Hits to the Harkonnens</h3>
+                <details class="step-details">
+                    <summary>Hits order</summary>
+                    <ul>
+                        @foreach (var step in GuidanceBuilder.HitPriority())
+                        {
+                            <li>@step.Text</li>
+                        }
+                    </ul>
+                </details>
+            </li>
+            <li>
+                <h3>How did the round end?</h3>
+                <div class="battle-outcomes">
+                    <button type="button" class="btn btn-primary" data-testid="battle-next-round" disabled="@(!DiscardReady)" @onclick="NextRound">
+                        Next round ▶
+                    </button>
+                    @foreach (var option in BattleRules.Outcomes(battle.Attacker))
+                    {
+                        var o = option;
+                        <button type="button" class="btn" data-testid="battle-outcome-@o" disabled="@(!DiscardReady)" @onclick="() => outcome = o">
+                            @BattleGuidance.OutcomeLabel(battle.Attacker, o)
+                        </button>
+                    }
+                </div>
+            </li>
+        </ol>
+
+        <ul class="battle-notes">
+            @foreach (var note in BattleGuidance.RoundNotes(battle))
+            {
+                <li><TermText Text="@note" /></li>
+            }
+        </ul>
+
+        @if (battle is { Round: 1, CardsDiscarded: 0 })
+        {
+            <button type="button" class="btn btn-ghost btn-small" data-testid="battle-cancel" @onclick="() => Session.Execute(new CancelBattle())">
+                Cancel battle (started by mistake)
+            </button>
+        }
+    };
+
+    private RenderFragment ResultView(BattleState battle, BattleOutcome chosen) => __builder =>
+    {
+        var sietchFalls = BattleRules.SietchFalls(battle, chosen);
+        var settlementFalls = BattleRules.SettlementFalls(battle, chosen);
+        var onBoard = Session.Content.Leaders.Where(l => State.Leaders[l.Id].Status == LeaderStatus.OnBoard).ToList();
+
+        <p class="battle-headline" data-testid="battle-result">
+            Battle over after @battle.Round round@(battle.Round == 1 ? "" : "s"): @BattleGuidance.OutcomeLabel(battle.Attacker, chosen).
+        </p>
+
+        @if (sietchFalls && battle.SietchCardId is { } id)
+        {
+            <h3>@SietchName(id) is destroyed. Its rank:</h3>
+            <div class="choice-grid ranks">
+                @for (var rank = 1; rank <= 3; rank++)
+                {
+                    var r = rank;
+                    <button type="button" class="choice rank @(sietchRank == r ? "selected" : "")" data-testid="battle-sietch-rank-@r"
+                            aria-pressed="@AriaBool(sietchRank == r)" @onclick="() => sietchRank = r">@r</button>
+                }
+            </div>
+            <p class="muted">Supremacy + rank@(id == State.Tactical.TargetCardId ? "; it is the Target Sietch, so a new Target is drawn" : "").</p>
+        }
+
+        @if (settlementFalls && battle.Settlement is { } s)
+        {
+            <p class="sheet-lead" data-testid="battle-settlement-falls">
+                @BattleGuidance.SettlementLabel(s) is destroyed: advance every Prescience marker by @BattleRules.SettlementRank(s).
+                @if (s == SettlementKind.Arrakeen)
+                {
+                    <strong> Check your Secret Objective now: if it is met, the Atreides win immediately (FAQ).</strong>
+                }
+            </p>
+        }
+
+        @if (onBoard.Count > 0)
+        {
+            <h3>Harkonnen Named Leaders killed <span class="muted">(go to the Regeneration Tank)</span></h3>
+            <div class="choice-grid">
+                @foreach (var leader in onBoard)
+                {
+                    var l = leader.Id;
+                    <button type="button" class="choice @(killed.Contains(l) ? "selected" : "")" data-testid="battle-killed-@l"
+                            aria-pressed="@AriaBool(killed.Contains(l))" @onclick="() => ToggleKilled(l)">@leader.Name</button>
+                }
+            </div>
+        }
+
+        @if (BattleRules.AttackerWins(chosen))
+        {
+            <p class="muted">The winning Legion may advance into the attacked Area or stay where it is (FAQ).</p>
+        }
+
+        <div class="button-row">
+            <button type="button" class="btn btn-big" data-testid="battle-back" @onclick="() => outcome = null">‹ Back to the round</button>
+            <button type="button" class="btn btn-primary btn-big" data-testid="battle-confirm"
+                    disabled="@(sietchFalls && sietchRank is null)" @onclick="() => Confirm(battle, chosen)">Confirm and close ▶</button>
+        </div>
+    };
+}

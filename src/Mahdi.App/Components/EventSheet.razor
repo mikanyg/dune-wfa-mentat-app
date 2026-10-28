@@ -22,7 +22,7 @@
         {
             case View.Menu:
                 <div class="sheet-grid">
-                    <button type="button" class="sheet-tile" data-testid="ev-battle" @onclick="() => view = View.Battle">
+                    <button type="button" class="sheet-tile" data-testid="ev-battle" @onclick="OnOpenBattle">
                         <span class="tile-title">Battle</span>
                         <span class="tile-desc">Reinforcements for Combat dice, Hits order</span>
                     </button>
@@ -71,10 +71,6 @@
                         <span class="tile-desc">Secret Objective met (or Arrakeen taken)</span>
                     </button>
                 </div>
-                break;
-
-            case View.Battle:
-                <CombatHelper State="State" OnDone="Close" />
                 break;
 
             case View.Sietch:
@@ -159,7 +155,6 @@
     private enum View
     {
         Menu,
-        Battle,
         Sietch,
         Truthtrance,
         Reveal,
@@ -179,9 +174,12 @@
     [Parameter]
     public EventCallback OnClose { get; set; }
 
+    /// <summary>The Battle tile hands over to the battle sheet.</summary>
+    [Parameter]
+    public EventCallback OnOpenBattle { get; set; }
+
     private string Heading => view switch
     {
-        View.Battle => "Battle",
         View.Sietch => "Sietch destroyed",
         View.Truthtrance => "Truthtrance",
         View.Victory => "Atreides victory",
@@ -201,7 +199,6 @@
     {
         view = StartView switch
         {
-            "battle" => View.Battle,
             "sietch" => View.Sietch,
             _ => View.Menu,
         };
