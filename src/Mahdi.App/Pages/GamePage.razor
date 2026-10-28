@@ -73,7 +73,7 @@ else
                     break;
 
                 case Phase.DesertHazards:
-                    <GuidanceCard Guidance="GuidanceBuilder.DesertHazards()" Class="frame" TestId="hazards-guidance" />
+                    <DesertHazardsCard Guidance="Session.Guidance.DesertHazards(state)" Class="frame" TestId="hazards-guidance" />
                     <button type="button" class="btn btn-primary btn-big" data-testid="confirm-phase"
                             @onclick="() => Session.Execute(new ConfirmDesertHazards())">Hazards resolved: harvest spice ▶</button>
                     break;

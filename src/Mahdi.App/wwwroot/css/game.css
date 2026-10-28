@@ -1419,8 +1419,139 @@ details[open] > summary::before {
     color: var(--text-muted);
 }
 
+/* ---------- Desert Hazards ---------- */
+
+.hazard-sections {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    counter-reset: hazard;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.hazard-section {
+    counter-increment: hazard;
+    position: relative;
+    padding-left: 42px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.hazard-section::before {
+    content: counter(hazard);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    background: var(--accent);
+    color: var(--accent-contrast);
+}
+
+.hazard-title {
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent-strong);
+    margin: 4px 0 2px;
+}
+
+.hazard-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 4px 16px;
+}
+
+.hazard-foot .step-details {
+    flex: 1 1 260px;
+}
+
+.hazard-help {
+    min-height: 32px;
+    font-size: 0.86rem;
+    font-weight: 600;
+}
+
+.hazard-help .term-icon {
+    margin: 0 4px 0 0;
+}
+
+.hazard-notes {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    border-top: 1px solid var(--rule-soft);
+    padding-top: 8px;
+}
+
+.hz-attacks {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.hz-attack {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 10px;
+    border-radius: var(--radius);
+    border: 1px solid var(--rule-soft);
+    background: var(--surface-2);
+}
+
+.hz-attack.focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.hz-attack-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+}
+
+.hz-dice strong {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    color: var(--harkonnen);
+}
+
+.hz-who {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+
+.hz-face {
+    white-space: nowrap;
+    font-weight: 600;
+    padding-right: 10px;
+}
+
+.hz-face-icon {
+    width: 1.1em;
+    height: 1.1em;
+    margin-right: 6px;
+    vertical-align: -0.2em;
+    color: var(--harkonnen);
+}
+
 @media (max-width: 560px) {
-    .cp-columns {
+    .cp-columns,
+    .hz-attacks {
         grid-template-columns: 1fr;
     }
 }

@@ -123,13 +123,66 @@ public sealed class GuidanceBuilder(GameContent content)
         return Special(state, turn, content.Leader(leader)) with { Alternative = regular };
     }
 
-    public static Guidance DesertHazards() => new(
-        "Desert Hazards",
-        "Play this phase as usual.",
-        "Apply Coriolis Storm Hits to Harkonnen Legions in this order:",
-        HitPriority(),
-        ["Harkonnen Legions retreat when a Sandworm appears in their Area (this is not a battle) (FAQ)."],
-        "Rulebook pp. 38, 41");
+    /// <summary>
+    /// The Desert Hazards phase (rulebook pp. 20, 30-31) with the solo criteria (pp. 38, 41). Without a game
+    /// in progress the round-specific names are left out.
+    /// </summary>
+    public DesertHazardsGuidance DesertHazards(GameState? state)
+    {
+        var harvesters = state?.Tactical.HarvestCardId is not null
+            ? $" This round's Harvesters went to the {HarvestSectorName(state)}."
+            : string.Empty;
+        var carryalls = state is not null && content.RowForStep(state.LowestImperiumStep).Carryalls is var count and > 0
+            ? $" {count} Carryall{Plural(count)} {(count == 1 ? "was" : "were")} placed this round."
+            : string.Empty;
+
+        return new DesertHazardsGuidance(
+            [
+                new HazardSection(
+                    "Wormsigns",
+                    "Wormsigns",
+                    [
+                        $"Place 1 facedown Wormsign token in each Desert or Deep Desert Area with a Harkonnen Legion or Harvester and no Wormsign or Sandworm.{harvesters}",
+                        "Then flip all Wormsign tokens on the board and resolve them in any order.",
+                    ],
+                    [
+                        "First discard the Wormsign tokens in Areas with an Atreides Legion or a Sandworm, shuffling them back into the pool.",
+                        "Sand: a false alarm. Discard the token.",
+                        "Sandworm: place a Sandworm in the Area, then discard the token.",
+                        "Burrowing Sandworm: place a Sandworm only if the Area is Deep Desert. Discard the token either way.",
+                        $"At most {HazardRules.MaxSandworms} Wormsign tokens bring Sandworms ({HazardRules.MaxSandworms + 1} with the Wild Maker in play). You choose and discard the excess.",
+                        "Each Sandworm comes from off the board or is moved from elsewhere on the board. The Wild Maker may be placed instead of a normal Sandworm (FAQ).",
+                    ]),
+                new HazardSection(
+                    "Sandworms",
+                    "Sandworms appear",
+                    [
+                        $"A Harvester alone in the Area is removed, unless a Carryall saves it: remove a Carryall from a connected Air Zone instead.{carryalls} Save Harvesters in Deep Desert first.",
+                        $"A Harkonnen Legion must retreat to an adjacent Area you choose, never one with a Wormsign token. If it cannot, the Sandworm attacks it with {HazardRules.Dice(HazardAttack.Sandworm)} Combat dice.",
+                    ],
+                    [
+                        "If the Legion retreats or is destroyed, a Harvester in the same Area is removed too, unless a Carryall saves it.",
+                        "A saved Harvester stays in the Area with the Sandworm until it is removed in Spice Harvesting.",
+                        $"The Wild Maker attacks with {HazardRules.Dice(HazardAttack.WildMaker)} Combat dice.",
+                        "This retreat is not a battle, so the rule that the Harkonnens never retreat does not apply (FAQ).",
+                        "Carryalls save Harvesters only in this phase, not when a Sandworm strikes during Action Resolution.",
+                    ],
+                    HazardAttack.Sandworm),
+                new HazardSection(
+                    "CoriolisStorms",
+                    "Coriolis Storms",
+                    [
+                        $"Roll {HazardRules.Dice(HazardAttack.CoriolisStorm)} Combat dice for each Harkonnen Legion in a Plateau, Minor Erg, Desert or Deep Desert Area, except the 5 central Plateaus encircled by Mountains. Atreides Legions are not affected.",
+                        "Apply the Hits: Leaders (keep 1), then Elite to Regular, then Sardaukar to Regular, then Regular Units.",
+                    ],
+                    [.. HitPriority().Select(step => step.Text)],
+                    HazardAttack.CoriolisStorm),
+            ],
+            [
+                "Remove casualties at once. A Named Leader eliminated by a Sandworm or a storm goes to the Regeneration Tank: tap it in the Leaders panel.",
+            ],
+            "Rulebook pp. 20, 30-31, 38 and 41");
+    }
 
     public static Guidance SpiceResult(SpiceResult result)
     {
