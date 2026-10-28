@@ -53,6 +53,7 @@ E2E screenshots go to `tests/Mahdi.App.E2E/bin/<config>/net10.0/screenshots/<dev
 ## Rule interpretations (revisit if the player disagrees)
 
 - With all Imperium markers on the top step and 7+ spice, the whole excess buys the Supremacy point (no Reserve).
+- The app keeps tracking the Imperium markers (they drive Vehicles, set-aside dice and Bans). Cards can move markers during the round, so Spice Harvesting lets the player correct a marker (`SetImperiumMarker`) before the spending is worked out; a correction never activates a Ban by itself.
 - Rabban's and Feyd-Rautha's specials are offered only when their figure is on the board.
 - A killed Leader enters the Regeneration Tank on "Start here" and returns after 5 Harkonnen turns, with its card ready.
 - Truthtrance limits follow the solo text: 3 spent, or 2 for Deployment/House.

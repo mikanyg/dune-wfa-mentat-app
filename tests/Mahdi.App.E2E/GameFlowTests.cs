@@ -52,7 +52,8 @@ public sealed partial class GameFlowTests(string device) : DeviceTest(device)
         await Expect(ById("harvest-spice")).ToBeInViewportAsync();
         await Tap("harvest-spice");
         await ExpectPhaseAsync("EndOfRound");
-        await Expect(ById("spice-result")).ToContainTextAsync("stays on step 5");
+        await Expect(ById("spice-summary")).ToHaveTextAsync("Spice: all markers kept");
+        await Expect(ById("important-step")).ToContainTextAsync("from 0 to 1");
 
         await Tap("confirm-phase");
         await ExpectPhaseAsync("RoundStart");
@@ -356,4 +357,55 @@ public sealed partial class GameFlowTests(string device) : DeviceTest(device)
 
     [GeneratedRegex(@"\bfocus\b")]
     private static partial Regex FocusClass();
+    [Test]
+    public async Task SpiceHarvestingCorrectsMarkersAndEndOfRoundIsItsOwnScreen()
+    {
+        await StartGameAsync(seed: 26);
+        await AdvanceToActionsAsync();
+        for (var turn = 1; turn <= 8; turn++)
+        {
+            await Tap("roll-die");
+            await Tap("complete-turn");
+        }
+
+        await Tap("confirm-phase");
+        await ExpectPhaseAsync("SpiceHarvesting");
+        for (var i = 0; i < 5; i++)
+        {
+            await Tap("desert-plus");
+        }
+
+        // 5 spice with every marker on the top step: CHOAM and the Guild are kept, the Landsraad drops.
+        await Expect(ById("spice-total")).ToHaveAttributeAsync("data-count", "5");
+        await Expect(ById("spend-Landsraad")).ToHaveAttributeAsync("data-change", "Dropped");
+        await Expect(ById("spend-reserve")).ToHaveAttributeAsync("data-value", "1");
+
+        // A card lowered the Spacing Guild marker during the round: correct it, and the spending follows.
+        await Tap("marker-SpacingGuild-4");
+        await Expect(ById("marker-SpacingGuild")).ToHaveAttributeAsync("data-value", "4");
+        await Expect(ById("marker-SpacingGuild-4")).ToHaveAttributeAsync("aria-pressed", "true");
+        await Expect(ById("marker-changed-SpacingGuild")).ToBeVisibleAsync();
+        await Expect(ById("spend-SpacingGuild")).ToHaveAttributeAsync("data-change", "Raised");
+        await Expect(ById("spend-SpacingGuild")).ToHaveAttributeAsync("data-value", "5");
+        await Expect(ById("spend-reserve")).ToHaveAttributeAsync("data-value", "0");
+
+        await ById("spice-rules").Locator("summary").ClickAsync();
+        await Expect(ById("spice-rules")).ToContainTextAsync("lowest first");
+        await Expect(ById("spice-rules")).Not.ToContainTextAsync("Stockpiling");
+        await Expect(ById("harvest-spice")).ToBeInViewportAsync();
+        await SnapshotAsync("spice-harvesting");
+
+        await Tap("harvest-spice");
+        await ExpectPhaseAsync("EndOfRound");
+        await Expect(ById("spice-panel")).ToHaveCountAsync(0);
+        await Expect(ById("spice-summary")).ToHaveTextAsync("Spice: Spacing Guild raised · Landsraad dropped · Landsraad Ban active");
+        await Expect(ById("important-step")).ToContainTextAsync("Advance the Harkonnen Supremacy marker 1 step on the board: from 0 to 1");
+        await Expect(ById("end-guidance")).ToContainTextAsync("Thufir Hawat enters play");
+        await Expect(ById("confirm-phase")).ToBeInViewportAsync();
+        await SnapshotAsync("end-of-round");
+
+        await Tap("confirm-phase");
+        await ExpectPhaseAsync("RoundStart");
+        await Expect(ById("supremacy")).ToHaveAttributeAsync("data-value", "1");
+    }
 }
