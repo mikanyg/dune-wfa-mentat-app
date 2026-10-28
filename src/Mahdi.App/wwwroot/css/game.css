@@ -1535,7 +1535,7 @@ details[open] > summary::before {
     color: var(--text-muted);
 }
 
-.hz-face {
+.cp-table td.hz-face {
     white-space: nowrap;
     font-weight: 600;
     padding-right: 10px;
