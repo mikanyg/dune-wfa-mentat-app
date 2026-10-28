@@ -19,7 +19,14 @@
             @foreach (var step in Guidance.Steps)
             {
                 <li>
-                    <span class="step-text"><TermText Text="@step.Text" /></span>
+                    @if (step.Important)
+                    {
+                        <strong class="step-text step-important" data-testid="important-step"><TermText Text="@step.Text" /></strong>
+                    }
+                    else
+                    {
+                        <span class="step-text"><TermText Text="@step.Text" /></span>
+                    }
                     @if (!step.Details.IsEmpty)
                     {
                         <details class="step-details">

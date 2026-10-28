@@ -1,50 +1,138 @@
 @using Mahdi.Engine.Commands
+@using Mahdi.Engine.Guidance
 @using Mahdi.Engine.Model
 @using Mahdi.Engine.Rules
 @inject GameSession Session
 
+@* Spice Harvesting: count the Harvesters, correct any Imperium marker a card moved, and see the spending live. *@
 <section class="spice-panel frame" data-testid="spice-panel">
     <h2>Spice Harvesting</h2>
-    <p class="muted">Remove the surviving Harvesters from the board and tap once for each.</p>
-    <div class="spice-counters">
-        <div class="counter" data-testid="desert-counter">
-            <span class="counter-label">Desert Harvesters<small>1 spice each</small></span>
-            <div class="counter-controls">
-                <button type="button" class="icon-btn" aria-label="One fewer Desert Harvester" data-testid="desert-minus"
-                        disabled="@(desert == 0)" @onclick="() => desert--">−</button>
-                <span class="counter-value" data-testid="desert-count">@desert</span>
-                <button type="button" class="icon-btn" aria-label="One more Desert Harvester" data-testid="desert-plus"
-                        @onclick="() => desert++">+</button>
+    <div class="spice-inputs">
+        <section class="spice-box" data-testid="harvesters">
+            <h3>Harvesters</h3>
+            <p class="muted">Remove the surviving Harvesters and tap once for each.</p>
+            <div class="spice-counters">
+                <div class="counter" data-testid="desert-counter">
+                    <span class="counter-label">Desert<small>1 spice each</small></span>
+                    <div class="counter-controls">
+                        <button type="button" class="icon-btn" aria-label="One fewer Desert Harvester" data-testid="desert-minus"
+                                disabled="@(desert == 0)" @onclick="() => desert--">−</button>
+                        <span class="counter-value" data-testid="desert-count">@desert</span>
+                        <button type="button" class="icon-btn" aria-label="One more Desert Harvester" data-testid="desert-plus"
+                                @onclick="() => desert++">+</button>
+                    </div>
+                </div>
+                <div class="counter" data-testid="deep-counter">
+                    <span class="counter-label">Deep Desert<small>2 spice each</small></span>
+                    <div class="counter-controls">
+                        <button type="button" class="icon-btn" aria-label="One fewer Deep Desert Harvester" data-testid="deep-minus"
+                                disabled="@(deep == 0)" @onclick="() => deep--">−</button>
+                        <span class="counter-value" data-testid="deep-count">@deep</span>
+                        <button type="button" class="icon-btn" aria-label="One more Deep Desert Harvester" data-testid="deep-plus"
+                                @onclick="() => deep++">+</button>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="counter" data-testid="deep-counter">
-            <span class="counter-label">Deep Desert Harvesters<small>2 spice each</small></span>
-            <div class="counter-controls">
-                <button type="button" class="icon-btn" aria-label="One fewer Deep Desert Harvester" data-testid="deep-minus"
-                        disabled="@(deep == 0)" @onclick="() => deep--">−</button>
-                <span class="counter-value" data-testid="deep-count">@deep</span>
-                <button type="button" class="icon-btn" aria-label="One more Deep Desert Harvester" data-testid="deep-plus"
-                        @onclick="() => deep++">+</button>
-            </div>
-        </div>
+            <p class="spice-total" data-testid="spice-total" data-count="@(Collected + State.SpiceReserve)">
+                <span class="spice-diamond">◆</span> @(Collected + State.SpiceReserve) spice to spend
+                @if (State.SpiceReserve > 0)
+                {
+                    <span class="muted"> (@Collected harvested + @State.SpiceReserve from the Reserve)</span>
+                }
+            </p>
+        </section>
+
+        <section class="spice-box" data-testid="markers">
+            <h3>Imperium markers before spending</h3>
+            @foreach (var power in Enum.GetValues<ImperiumPower>())
+            {
+                var current = State.Imperium[power];
+                <div class="marker-row" data-testid="marker-@power" data-value="@current">
+                    <span class="marker-name">
+                        @GuidanceBuilder.ImperiumName(power)
+                        @if (corrected.Contains(power))
+                        {
+                            <small class="marker-changed" data-testid="marker-changed-@power">changed by you</small>
+                        }
+                    </span>
+                    <span class="marker-steps" role="group" aria-label="@($"{GuidanceBuilder.ImperiumName(power)} step")">
+                        @for (var step = Session.Content.BottomStep; step <= Session.Content.TopStep; step++)
+                        {
+                            var value = step;
+                            <button type="button" class="marker-step @(value == current ? "selected" : "") @(value < current ? "below" : "")"
+                                    data-testid="marker-@power-@value" aria-pressed="@AriaBool(value == current)"
+                                    @onclick="() => SetMarker(power, value)">@value</button>
+                        }
+                    </span>
+                </div>
+            }
+            <p class="muted marker-hint">Tap a step if a card moved a marker during the round.</p>
+        </section>
     </div>
-    <p class="spice-total" data-testid="spice-total">
-        <span class="spice-diamond">◆</span> @SpiceRules.Collected(desert, deep) spice
-        @if (State.SpiceReserve > 0)
-        {
-            <span class="muted"> + 1 from the Reserve</span>
-        }
-    </p>
+
+    <section class="spice-box spending" data-testid="spending">
+        <h3>Spending</h3>
+        <ul class="spend-list">
+            @foreach (var marker in Preview.Markers)
+            {
+                <li class="spend-row" data-testid="spend-@marker.Power" data-value="@marker.To" data-change="@marker.Change">
+                    <span class="spend-name">@GuidanceBuilder.ImperiumName(marker.Power)</span>
+                    <span class="spend-steps">@marker.From to @marker.To</span>
+                    <span class="spend-label">@GuidanceBuilder.SpendLabel(marker)</span>
+                    @if (marker.Change is MarkerChange.Dropped or MarkerChange.StayedAtBottom)
+                    {
+                        <span class="chip chip-ban">Ban until the next harvest</span>
+                    }
+                </li>
+            }
+            @if (Preview.SupremacyGained)
+            {
+                <li class="spend-row" data-testid="spend-supremacy">All markers on the top step: the Harkonnens score 1 Supremacy point instead.</li>
+            }
+            <li class="spend-row" data-testid="spend-reserve" data-value="@Preview.NewReserve">
+                <span class="spend-name">Spice Reserve</span>
+                <span class="spend-label">@(Preview.NewReserve > 0 ? $"{Preview.NewReserve} saved: put the Reserve token on the board" : "none")</span>
+            </li>
+            @if (Preview.Wasted > 0)
+            {
+                <li class="spend-row muted" data-testid="spend-wasted">@Preview.Wasted spice cannot be used and is lost.</li>
+            }
+        </ul>
+        <details class="step-details" data-testid="spice-rules">
+            <summary>Rules for this phase</summary>
+            <ul>
+                @foreach (var rule in GuidanceBuilder.SpiceHarvestingRules)
+                {
+                    <li>@rule</li>
+                }
+            </ul>
+            <p class="rule-ref">Rulebook pp. 21 and 38, FAQ 3.1</p>
+        </details>
+    </section>
+
     <button type="button" class="btn btn-primary btn-big" data-testid="harvest-spice"
             @onclick="() => Session.Execute(new HarvestSpice(desert, deep))">
-        Spend the spice ▶
+        Apply: move the markers, then end of round ▶
     </button>
 </section>
 
 @code {
+    private readonly HashSet<ImperiumPower> corrected = [];
     private int desert;
     private int deep;
 
     [Parameter, EditorRequired]
     public GameState State { get; set; } = default!;
+
+    private int Collected => SpiceRules.Collected(desert, deep);
+
+    private SpiceResult Preview => SpiceRules.Resolve(Session.Content, State.Imperium, State.SpiceReserve, Collected);
+
+    private void SetMarker(ImperiumPower power, int step)
+    {
+        if (State.Imperium[power] != step && Session.Execute(new SetImperiumMarker(power, step)))
+        {
+            corrected.Add(power);
+        }
+    }
 }

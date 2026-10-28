@@ -25,6 +25,9 @@ public sealed record PlayTruthtrance(DieFace Face) : GameCommand;
 
 public sealed record ConfirmDesertHazards : GameCommand;
 
+/// <summary>Corrects an Imperium marker before spending spice (a card may have moved it during the round).</summary>
+public sealed record SetImperiumMarker(ImperiumPower Power, int Step) : GameCommand;
+
 public sealed record HarvestSpice(int DesertHarvesters, int DeepDesertHarvesters) : GameCommand;
 
 public sealed record EndRound : GameCommand;

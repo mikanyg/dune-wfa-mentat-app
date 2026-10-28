@@ -184,48 +184,136 @@ public sealed class GuidanceBuilder(GameContent content)
             "Rulebook pp. 20, 30-31, 38 and 41");
     }
 
-    public static Guidance SpiceResult(SpiceResult result)
+    /// <summary>
+    /// Spice Harvesting as played solo: the core rules (p. 21) with the solo criteria (p. 38) and the FAQ 3.1
+    /// Ban change. Core rules that solo replaces (Stockpiling, saving spice by choice, a single Ban) are left out.
+    /// </summary>
+    public static ImmutableArray<string> SpiceHarvestingRules { get; } =
+    [
+        "Remove the surviving Harvesters: 1 spice for each in a Desert Area, 2 for each in a Deep Desert Area.",
+        "Add the Spice Reserve. Solo: all spice is spent, the Reserve included.",
+        $"Keeping a marker on its step costs {SpiceRules.KeepCost}; raising it 1 step costs {SpiceRules.RaiseCost} (at most 1 step per phase). Any other marker drops 1 step.",
+        "Solo: first keep the markers from dropping, lowest first, then raise the lowest one(s).",
+        $"Solo: with all markers on the top step and {SpiceRules.SupremacyThreshold}+ spice, the Harkonnens score 1 Supremacy point instead.",
+        $"Spice that cannot be spent goes to the Spice Reserve (at most {SpiceRules.MaxReserve}); any more is lost.",
+        "Every marker on the bottom step and every marker that just dropped activates its Ban (all of them, FAQ). Bans last until the next Spice Harvesting.",
+    ];
+
+    public static string ImperiumName(ImperiumPower power) => power switch
     {
-        var steps = result.Markers.Select(m => new GuidanceStep(MarkerText(m))).ToList();
+        ImperiumPower.Choam => "CHOAM",
+        ImperiumPower.SpacingGuild => "Spacing Guild",
+        ImperiumPower.Landsraad => "Landsraad",
+        _ => power.ToString(),
+    };
+
+    /// <summary>What happens to one Imperium marker, e.g. "raise (3)".</summary>
+    public static string SpendLabel(MarkerOutcome marker) => marker.Change switch
+    {
+        MarkerChange.Raised => $"raise ({marker.Spent})",
+        MarkerChange.Kept => $"keep ({marker.Spent})",
+        MarkerChange.Dropped => "drops",
+        MarkerChange.StayedAtBottom => "stays on the bottom step",
+        _ => marker.Change.ToString(),
+    };
+
+    /// <summary>The Imperium markers whose Ban this spending activates or keeps active.</summary>
+    public static ImmutableArray<ImperiumPower> BansAfter(SpiceResult result) =>
+        [.. result.Markers.Where(m => m.Change is MarkerChange.Dropped or MarkerChange.StayedAtBottom).Select(m => m.Power)];
+
+    /// <summary>One line summing up the spending, shown at the end of the round.</summary>
+    public static string SpiceSummary(SpiceResult result)
+    {
+        var parts = result.Markers
+            .Where(m => m.Change != MarkerChange.Kept)
+            .Select(m => m.Change switch
+            {
+                MarkerChange.Raised => $"{ImperiumName(m.Power)} raised",
+                MarkerChange.Dropped => $"{ImperiumName(m.Power)} dropped",
+                _ => $"{ImperiumName(m.Power)} on the bottom step",
+            })
+            .ToList();
+
+        if (parts.Count == 0)
+        {
+            parts.Add("all markers kept");
+        }
+
         if (result.SupremacyGained)
         {
-            steps.Add(new("All Imperium markers were already on the top step: the Harkonnens score 1 Supremacy point instead."));
+            parts.Add("Supremacy +1");
         }
 
-        var notes = ImmutableArray.CreateBuilder<string>();
-        notes.Add(result.NewReserve > 0
-            ? "Put the Spice Reserve token on The Spice Must Flow board (1 spice saved)."
-            : "Spice Reserve: none.");
-        if (result.Wasted > 0)
+        var bans = BansAfter(result);
+        if (!bans.IsEmpty)
         {
-            notes.Add($"{result.Wasted} spice could not be used and is lost.");
+            parts.Add($"{string.Join(", ", bans.Select(ImperiumName))} Ban active");
         }
 
-        notes.Add("Carryalls: always save Harvesters in Deep Desert Areas first.");
-        notes.Add("Stockpiling is not used in solo.");
+        if (result.NewReserve > 0)
+        {
+            parts.Add($"Reserve {result.NewReserve}");
+        }
 
-        var total = result.Collected + result.ReserveUsed;
-        return new Guidance(
-            "Spice Harvesting",
-            $"{total} spice to spend ({result.Collected} harvested{(result.ReserveUsed > 0 ? $" + {result.ReserveUsed} from the Reserve" : "")}).",
-            "Move the Imperium markers:",
-            [.. steps],
-            notes.ToImmutable(),
-            "Rulebook p. 38");
+        return $"Spice: {string.Join(" · ", parts)}";
     }
 
-    public Guidance EndOfRound(GameState state) => new(
-        "End of the Round",
-        $"Apply the usual steps, then the Harkonnen Supremacy marker advances 1 step (to {Math.Min(content.Supremacy.Max, state.Supremacy + 1)}).",
-        null,
-        [
-            new("Atreides: check End of the Round Prescience cards and your Secret Objective. If it is met, declare victory."),
-            new("Remove all Ornithopters and Carryalls from the board."),
-            new("Never discard Planning cards in the Reinforcements deck, and never replace Harkonnen Named Leaders on the board."),
-            new("The 8 Tactical cards are reshuffled into a new deck (the app does this)."),
-        ],
-        [],
-        "Rulebook p. 39");
+    public Guidance EndOfRound(GameState state)
+    {
+        var from = state.Supremacy;
+        var to = Math.Min(content.Supremacy.Max, from + 1);
+        var steps = ImmutableArray.CreateBuilder<GuidanceStep>();
+        steps.Add(new("Atreides: claim End of the Round Prescience cards (at most 2 per round), then check your Secret Objective."));
+        steps.Add(new("Remove all Ornithopters and Carryalls from the board."));
+        steps.Add(new("You may replace Atreides Named Leaders on the board with Generic ones. Harkonnen Named Leaders stay (solo)."));
+        steps.Add(new("Flip spent Leader cards faceup (the app marks them ready)."));
+        steps.Add(new("Discard your Planning hand down to 6 cards. Never discard the Harkonnen Reinforcements (solo)."));
+        steps.Add(new("Discard the claimed Prescience cards, and any unclaimed ones you choose."));
+        steps.Add(new($"Advance the Harkonnen Supremacy marker 1 step on the board: from {from} to {to}.") { Important = true });
+
+        foreach (var text in SupremacyEffects(state, to))
+        {
+            steps.Add(new(text));
+        }
+
+        steps.Add(new("The app reshuffles the 8 Tactical cards for the next round."));
+
+        return new Guidance(
+            $"End of Round {state.Round}",
+            "Apply these steps on the board, then end the round.",
+            null,
+            steps.ToImmutable(),
+            [
+                "If all your Generic Leaders are on the board, you may still remove a Named Leader, without a replacement (FAQ).",
+                "Leader cards of Leaders in the Regeneration Tank are flipped faceup but stay off the dashboard.",
+                "Imperium Bans stay active until the next Spice Harvesting.",
+            ],
+            "Rulebook pp. 16 and 39, FAQ 3.1");
+    }
+
+    /// <summary>What reaching this Supremacy step brings: Leaders entering play, Bene Gesserit tokens, victory.</summary>
+    private IEnumerable<string> SupremacyEffects(GameState state, int step)
+    {
+        foreach (var leader in content.Leaders.Where(l => l.Entry == LeaderEntry.SupremacyStep && l.EntryStep == step
+                     && state.Leaders[l.Id].Status == LeaderStatus.NotInPlay))
+        {
+            yield return $"{leader.Name} enters play: place the Leader card on the {FaceName(leader.Face)} Action box.";
+            if (leader.Replaces is { } replaced && state.Leaders[replaced].Status != LeaderStatus.Removed)
+            {
+                yield return $"{content.Leader(replaced).Name} is removed from the game (remove the figure if it is on the board).";
+            }
+        }
+
+        if (content.Supremacy.AtreidesBeneGesseritSteps.Contains(step))
+        {
+            yield return "The Atreides take 1 Bene Gesserit token from the reserve.";
+        }
+
+        if (step >= content.Supremacy.Max)
+        {
+            yield return $"Supremacy {content.Supremacy.Max}: the Harkonnens win the game.";
+        }
+    }
 
     public static Guidance Combat(GameState state) => new(
         "Harkonnen battle",
@@ -455,26 +543,6 @@ public sealed class GuidanceBuilder(GameContent content)
         {
             notes.Add($"{ban.Name} Ban: {ban.SoloEffect}");
         }
-    }
-
-    private static string MarkerText(MarkerOutcome m)
-    {
-        var name = m.Power switch
-        {
-            ImperiumPower.Choam => "CHOAM",
-            ImperiumPower.SpacingGuild => "Spacing Guild",
-            ImperiumPower.Landsraad => "Landsraad",
-            _ => m.Power.ToString(),
-        };
-
-        return m.Change switch
-        {
-            MarkerChange.Raised => $"{name}: spend 3, raise to step {m.To}.",
-            MarkerChange.Kept => $"{name}: spend 2, stays on step {m.To}.",
-            MarkerChange.Dropped => $"{name}: no spice, drops to step {m.To}. Its Ban is activated.",
-            MarkerChange.StayedAtBottom => $"{name}: no spice, stays on the bottom step. Its Ban stays active.",
-            _ => name,
-        };
     }
 
     private static string Plural(int count) => count == 1 ? string.Empty : "s";

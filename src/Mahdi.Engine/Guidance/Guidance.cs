@@ -18,6 +18,9 @@ public sealed record Guidance(
 /// <param name="Details">Tie-breakers or sub-steps, shown in an expandable section.</param>
 public sealed record GuidanceStep(string Text, ImmutableArray<string> Details)
 {
+    /// <summary>Shown in bold: a step the player must not miss.</summary>
+    public bool Important { get; init; }
+
     public GuidanceStep(string text)
         : this(text, [])
     {

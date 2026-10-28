@@ -43,6 +43,7 @@ public static class GameReducer
         TruthtranceChosen x => state with { Dice = state.Dice with { ForcedFace = x.Face } },
         DesertHazardsConfirmed => state with { Phase = Phase.SpiceHarvesting },
         SpiceHarvested x => ApplySpice(content, state, x.Result),
+        ImperiumMarkerSet x => state with { Imperium = state.Imperium.SetItem(x.Power, x.Step) },
         RoundEnded => EndRound(content, state),
         SietchDestroyed x => DestroySietch(content, state, x),
         TargetSietchDrawn x => DrawTarget(content, state, x),
