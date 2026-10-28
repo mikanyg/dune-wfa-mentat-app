@@ -5,6 +5,10 @@
 {
     <CombatPowerSheet OnClose="Help.Close" />
 }
+else if (Help.Current == HelpTopic.DesertHazards)
+{
+    <DesertHazardSheet Focus="@Help.Focus" OnClose="Help.Close" />
+}
 
 @code {
     protected override void OnInitialized() => Help.Changed += OnChanged;

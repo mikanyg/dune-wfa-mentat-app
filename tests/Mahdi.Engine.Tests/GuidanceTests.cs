@@ -125,14 +125,36 @@ public class GuidanceTests
     }
 
     [Test]
-    public void DesertHazardsListsTheHitOrder()
+    public void DesertHazardsCoverWormsignsSandwormsAndCoriolisStorms()
     {
-        var guidance = GuidanceBuilder.DesertHazards();
+        var guidance = Builder.DesertHazards(null);
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(guidance.Steps, Has.Length.EqualTo(4));
-            Assert.That(guidance.Steps[0].Text, Does.Contain("Bashar Leaders first"));
+            Assert.That(guidance.Sections.Select(s => s.Key), Is.EqualTo(new[] { "Wormsigns", "Sandworms", "CoriolisStorms" }));
+            Assert.That(guidance.Sections[0].Details, Has.Some.Contains("Burrowing Sandworm"));
+            Assert.That(guidance.Sections[1].Lines, Has.Some.Contains("4 Combat dice"));
+            Assert.That(guidance.Sections[1].Help, Is.EqualTo(HazardAttack.Sandworm));
+            Assert.That(guidance.Sections[2].Lines, Has.Some.Contains("Roll 2 Combat dice"));
+            Assert.That(guidance.Sections[2].Help, Is.EqualTo(HazardAttack.CoriolisStorm));
+            Assert.That(guidance.Sections[2].Details, Has.Length.EqualTo(4));
+            Assert.That(guidance.Sections[2].Details[0], Does.Contain("Bashar Leaders first"));
+            Assert.That(guidance.Sections.SelectMany(s => s.Lines), Has.None.Contains("placed this round"));
+        }
+    }
+
+    [Test]
+    public void DesertHazardsNameThisRoundsHarvestingSectorAndCarryalls()
+    {
+        var game = TestGame.InActionResolution(DiceMode.Physical);
+        TestGame.SpendAllDice(game);
+
+        var guidance = Builder.DesertHazards(game.State);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(guidance.Sections[0].Lines[0], Does.Contain($"went to the {Builder.HarvestSectorName(game.State)}"));
+            Assert.That(guidance.Sections[1].Lines[0], Does.Contain("1 Carryall was placed this round"));
         }
     }
 

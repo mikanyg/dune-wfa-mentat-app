@@ -1,0 +1,65 @@
+@using Mahdi.Engine.Guidance
+@using Mahdi.Engine.Model
+@inject HelpService Help
+
+@* Desert Hazards in three sections: what to do, always shown, with edge cases behind "Details" and links to the Hits help. *@
+<article class="guidance hazards @Class" data-testid="@TestId">
+    <h3 class="guidance-title">Desert Hazards</h3>
+    <ol class="hazard-sections">
+        @foreach (var section in Guidance.Sections)
+        {
+            <li class="hazard-section" data-testid="hazards-section-@section.Key">
+                <h4 class="hazard-title">@section.Title</h4>
+                @foreach (var line in section.Lines)
+                {
+                    <p class="hazard-line"><TermText Text="@line" /></p>
+                }
+                <div class="hazard-foot">
+                    @if (!section.Details.IsEmpty)
+                    {
+                        <details class="step-details" data-testid="hazards-details-@section.Key">
+                            <summary>Details</summary>
+                            <ul>
+                                @foreach (var detail in section.Details)
+                                {
+                                    <li>@detail</li>
+                                }
+                            </ul>
+                        </details>
+                    }
+                    @if (section.Help is { } attack)
+                    {
+                        <button type="button" class="term-link hazard-help" data-testid="hz-link-@attack"
+                                @onclick="() => Help.Show(HelpTopic.DesertHazards, attack.ToString())">
+                            <Icon Name="Icon.IconName.Info" Class="term-icon" />@HelpLabel(attack)
+                        </button>
+                    }
+                </div>
+            </li>
+        }
+    </ol>
+    <ul class="hazard-notes">
+        @foreach (var note in Guidance.Notes)
+        {
+            <li>@note</li>
+        }
+    </ul>
+    <p class="rule-ref">@Guidance.RuleReference</p>
+</article>
+
+@code {
+    [Parameter, EditorRequired]
+    public DesertHazardsGuidance Guidance { get; set; } = default!;
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    [Parameter]
+    public string TestId { get; set; } = "hazards-guidance";
+
+    private static string HelpLabel(HazardAttack attack) => attack switch
+    {
+        HazardAttack.CoriolisStorm => "Coriolis Storm Hits",
+        _ => "Sandworm attack Hits",
+    };
+}

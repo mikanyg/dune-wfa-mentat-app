@@ -1,0 +1,110 @@
+@using Mahdi.Engine.Guidance
+@using Mahdi.Engine.Model
+
+@* Coriolis Storm and Sandworm Hits (rulebook pp. 20, 31, 41), opened from the Desert Hazards card. *@
+<div class="sheet-backdrop" data-testid="hz-backdrop" @onclick="OnClose"></div>
+<section class="sheet cp-sheet hz-sheet" role="dialog" aria-modal="true" aria-label="Desert hazard Hits"
+         data-testid="hz-sheet" data-focus="@Focus">
+    <header class="sheet-head">
+        <h2>Desert hazard Hits</h2>
+        <button type="button" class="icon-btn" data-testid="hz-close" aria-label="Close" @onclick="OnClose">×</button>
+    </header>
+    <div class="sheet-body">
+        <ul class="hz-attacks" data-testid="hz-attacks">
+            @foreach (var row in Help.Attacks)
+            {
+                <li class="hz-attack @(row.Attack.ToString() == Focus ? "focus" : "")" data-testid="hz-attack-@row.Attack"
+                    data-count="@row.Dice">
+                    <span class="hz-attack-name">@row.Name</span>
+                    <span class="hz-dice"><strong>@row.Dice</strong> Combat dice</span>
+                    <span class="hz-who">@row.WhoIsHit</span>
+                </li>
+            }
+        </ul>
+        <div class="cp-columns">
+            <section class="cp-block" data-testid="hz-results">
+                <h3>Each die result</h3>
+                <table class="cp-table">
+                    @foreach (var row in Help.DieResults)
+                    {
+                        <tr data-testid="hz-face-@row.Face">
+                            <td class="hz-face"><Icon Name="FaceIcon(row.Face)" Class="hz-face-icon" />@row.Name</td>
+                            <td>@row.Effect</td>
+                        </tr>
+                    }
+                </table>
+            </section>
+            <section class="cp-block" data-testid="hz-terrain">
+                <h3>Hits per Special (star)</h3>
+                <table class="cp-table">
+                    @foreach (var row in Help.SpecialHits)
+                    {
+                        <tr data-testid="hz-terrain-@row.Terrain"><td>@row.Label</td><td class="cp-points">@row.Hits</td></tr>
+                    }
+                </table>
+            </section>
+        </div>
+        <section class="cp-block" data-testid="hz-exposed">
+            <h3>Areas exposed to Coriolis Storms</h3>
+            <ul class="cp-chips">
+                @foreach (var area in Help.ExposedAreas)
+                {
+                    <li><span>@area</span></li>
+                }
+            </ul>
+            <ul class="cp-notes">
+                @foreach (var area in Help.NotExposed)
+                {
+                    <li>Not: @area</li>
+                }
+            </ul>
+        </section>
+        <section class="cp-block" data-testid="hz-example">
+            <h3>Example</h3>
+            <p>
+                @Help.ExampleLegion is caught by a storm. The 2 Combat dice show @Help.ExampleSwords Sword
+                and @Help.ExampleSpecials Special: <strong data-testid="hz-example-total">@Help.ExampleHits</strong> Hits.
+            </p>
+            <ol class="cp-notes">
+                @foreach (var step in Help.ExampleSteps)
+                {
+                    <li>@step</li>
+                }
+            </ol>
+        </section>
+        <section class="cp-block" data-testid="hz-priority">
+            <h3>Harkonnen Hit priority (solo)</h3>
+            <ul class="cp-notes">
+                @foreach (var step in Help.HitPriority)
+                {
+                    <li>@step</li>
+                }
+            </ul>
+        </section>
+        <ul class="cp-notes">
+            @foreach (var note in Help.Notes)
+            {
+                <li>@note</li>
+            }
+        </ul>
+        <p class="rule-ref">@Help.RuleReference</p>
+    </div>
+</section>
+
+@code {
+    private static DesertHazardHelp Help => DesertHazardHelp.Rules;
+
+    /// <summary>The attack the sheet was opened for; its row is highlighted.</summary>
+    [Parameter]
+    public string? Focus { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    private static Icon.IconName FaceIcon(CombatDieFace face) => face switch
+    {
+        CombatDieFace.Sword => Icon.IconName.Sword,
+        CombatDieFace.Shield => Icon.IconName.Shield,
+        _ => Icon.IconName.Special,
+    };
+}

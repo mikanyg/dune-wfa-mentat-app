@@ -1,6 +1,8 @@
+using System.Text.RegularExpressions;
+
 namespace Mahdi.App.E2E;
 
-public sealed class GameFlowTests(string device) : DeviceTest(device)
+public sealed partial class GameFlowTests(string device) : DeviceTest(device)
 {
     [Test]
     public async Task FullRoundWithTheAppRollingTheDice()
@@ -253,6 +255,7 @@ public sealed class GameFlowTests(string device) : DeviceTest(device)
         await Tap("cp-close");
         await Expect(ById("battle-sheet")).ToBeVisibleAsync();
     }
+
     [Test]
     public async Task DeploymentLetsThePlayerChooseTheNamedLeader()
     {
@@ -308,4 +311,49 @@ public sealed class GameFlowTests(string device) : DeviceTest(device)
             await Tap("rail-toggle");
         }
     }
+
+    [Test]
+    public async Task DesertHazardsExplainEachHazardAndLinkToTheHitsHelp()
+    {
+        await StartGameAsync(seed: 25);
+        await AdvanceToActionsAsync();
+        for (var turn = 1; turn <= 8; turn++)
+        {
+            await Tap("roll-die");
+            await Tap("complete-turn");
+        }
+
+        await ExpectPhaseAsync("DesertHazards");
+        await Expect(ById("hazards-section-Wormsigns")).ToContainTextAsync("This round's Harvesters went to the");
+        await Expect(ById("hazards-section-Sandworms")).ToContainTextAsync("1 Carryall was placed this round");
+        await Expect(ById("hazards-section-CoriolisStorms")).ToContainTextAsync("Roll 2 Combat dice");
+        await Expect(ById("confirm-phase")).ToBeInViewportAsync();
+
+        await ById("hazards-details-Wormsigns").Locator("summary").ClickAsync();
+        await Expect(ById("hazards-details-Wormsigns")).ToContainTextAsync("Burrowing Sandworm");
+        await SnapshotAsync("desert-hazards");
+
+        await Tap("hz-link-Sandworm");
+        await Expect(ById("hz-sheet")).ToHaveAttributeAsync("data-focus", "Sandworm");
+        await Expect(ById("hz-attack-Sandworm")).ToHaveAttributeAsync("data-count", "4");
+        await Expect(ById("hz-attack-Sandworm")).ToHaveClassAsync(FocusClass());
+        await Expect(ById("hz-terrain-DeepDesert")).ToContainTextAsync("2");
+        await Expect(ById("hz-face-Shield")).ToContainTextAsync("No effect");
+        await Expect(ById("hz-example-total")).ToHaveTextAsync("3");
+        await SnapshotAsync("desert-hazard-hits");
+        await Tap("hz-close");
+        await Expect(ById("hz-sheet")).ToHaveCountAsync(0);
+
+        await Tap("hz-link-CoriolisStorm");
+        await Expect(ById("hz-sheet")).ToHaveAttributeAsync("data-focus", "CoriolisStorm");
+        await Expect(ById("hz-attack-CoriolisStorm")).ToHaveAttributeAsync("data-count", "2");
+        await Expect(ById("hz-attack-CoriolisStorm")).ToHaveClassAsync(FocusClass());
+        await Tap("hz-close");
+
+        await Tap("confirm-phase");
+        await ExpectPhaseAsync("SpiceHarvesting");
+    }
+
+    [GeneratedRegex(@"\bfocus\b")]
+    private static partial Regex FocusClass();
 }
