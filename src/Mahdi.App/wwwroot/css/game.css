@@ -964,8 +964,8 @@ details[open] > summary::before {
 }
 
 .spend-steps {
-    font-family: var(--font-display);
     font-weight: 700;
+    font-variant-numeric: tabular-nums;
     min-width: 4.5em;
 }
 
