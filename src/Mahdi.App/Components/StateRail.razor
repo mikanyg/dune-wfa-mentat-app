@@ -115,6 +115,11 @@
                         @if (selectedLeader == leader.Id)
                         {
                             <div class="leader-actions">
+                                @if (ls.Status == LeaderStatus.InReserve)
+                                {
+                                    <button type="button" class="btn btn-small" data-testid="leader-on-board"
+                                            @onclick="() => Run(new PlaceLeaderOnBoard(leader.Id))">Placed on the board</button>
+                                }
                                 @if (ls.IsActive)
                                 {
                                     <button type="button" class="btn btn-small" data-testid="leader-killed"
@@ -170,6 +175,7 @@
     private static string StatusText(LeaderState leader) => leader.Status switch
     {
         LeaderStatus.InTank => leader.TankPosition == GameReducer.TankStart ? "Tank: start" : $"Tank: {leader.TankPosition}",
+        LeaderStatus.OnBoard when leader.CardSpent => "on board, spent",
         _ when leader.CardSpent => "spent",
         LeaderStatus.OnBoard => "on board",
         _ => "ready",

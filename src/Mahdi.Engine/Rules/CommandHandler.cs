@@ -158,6 +158,19 @@ public static class CommandHandler
                 batch.Emit(new LeaderRemovedFromGame(x.Leader));
                 break;
 
+            case ChooseDeployLeader x:
+                Require(state.Dice.Pending is { Face: DieFace.Deployment, DeployLeader: not null },
+                    "No Deployment with a Named Leader is being resolved.");
+                Require(LeaderRules.DeployChoices(content, state).Contains(x.Leader),
+                    "That Leader cannot be deployed: Beast Rabban and Feyd-Rautha come first, and the Leader must be in reserve.");
+                batch.Emit(new DeployLeaderChosen(x.Leader));
+                break;
+
+            case PlaceLeaderOnBoard x:
+                Require(state.Leaders[x.Leader].Status == LeaderStatus.InReserve, "That Leader is not in reserve.");
+                batch.Emit(new LeaderPlacedOnBoard(x.Leader));
+                break;
+
             case PlayRageOvercameShaddam:
                 Require(state.Leaders[LeaderId.ShaddamIV].Status == LeaderStatus.NotInPlay, "Shaddam IV is already in play.");
                 batch.Emit(new RageOvercameShaddamPlayed());

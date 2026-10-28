@@ -60,6 +60,13 @@ public static class GameReducer
         BeneGesseritGained => GainBeneGesserit(content, state),
         LeaderKilled x => KillLeader(content, state, x.Leader),
         LeaderRemovedFromGame x => RemoveLeader(content, state, x.Leader),
+        DeployLeaderChosen x => state.Dice.Pending is { } pending
+            ? state with { Dice = state.Dice with { Pending = pending with { DeployLeader = x.Leader } } }
+            : state,
+        LeaderPlacedOnBoard x => state with
+        {
+            Leaders = state.Leaders.SetItem(x.Leader, state.Leaders[x.Leader] with { Status = LeaderStatus.OnBoard }),
+        },
         RageOvercameShaddamPlayed => EnterLeaders(content, state, LeaderEntry.WhenRageOvercameShaddamPlayed),
         NextDeckSet x => state with { NextDeck = x.Deck },
         HawatsSchemingPlayed => state.HawatsSchemingOnTable
