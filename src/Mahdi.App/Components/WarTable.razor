@@ -1,6 +1,7 @@
 @using Mahdi.Engine.Commands
 @using Mahdi.Engine.Guidance
 @using Mahdi.Engine.Model
+@using Mahdi.Engine.Rules
 @inject GameSession Session
 
 @* Action Resolution: one tap per Harkonnen turn. *@
@@ -31,6 +32,20 @@
             @if (turn.Forced)
             {
                 <p class="result-reroll">Result chosen with Truthtrance.</p>
+            }
+            @if (turn is { Face: DieFace.Deployment, DeployLeader: { } deploying }
+                 && LeaderRules.DeployChoices(Session.Content, State) is { Length: > 1 } choices)
+            {
+                <div class="deploy-leader" role="group" aria-label="Leader to deploy" data-testid="deploy-leader">
+                    <span class="deploy-leader-label">Leader to deploy:</span>
+                    @foreach (var id in choices)
+                    {
+                        <button type="button" class="choice deploy-choice @(id == deploying ? "selected" : "")" data-testid="deploy-leader-@id"
+                                aria-pressed="@AriaBool(id == deploying)" @onclick="() => ChooseLeader(id, deploying)">
+                            @Session.Content.Leader(id).Name
+                        </button>
+                    }
+                </div>
             }
             <GuidanceCard Guidance="shown" ShowTitle="false" TestId="turn-guidance" />
             @if (guidance.Alternative is not null)
@@ -91,6 +106,14 @@
     {
         useRegular = false;
         Session.Execute(new EnterHarkonnenDie(face));
+    }
+
+    private void ChooseLeader(LeaderId leader, LeaderId current)
+    {
+        if (leader != current)
+        {
+            Session.Execute(new ChooseDeployLeader(leader));
+        }
     }
 
     private void Complete()

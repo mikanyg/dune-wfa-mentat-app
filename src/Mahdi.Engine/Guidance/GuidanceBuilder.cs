@@ -314,10 +314,14 @@ public sealed class GuidanceBuilder(GameContent content)
             notes.Add(leaderNote);
         }
 
-        var others = LeaderRules.DeployCandidates(content, state).Where(l => l != turn.DeployLeader).ToList();
-        if (turn.DeployLeader is not null && others.Count > 0 && !content.Leader(turn.DeployLeader.Value).DeployFirst)
+        var others = LeaderRules.DeployChoices(content, state).Where(l => l != turn.DeployLeader).ToList();
+        if (turn.DeployLeader is not null && others.Count > 0)
         {
-            notes.Add($"If you can, you choose: {string.Join(", ", others.Select(l => content.Leader(l).Name))} could be deployed instead.");
+            notes.Add($"If you can, you choose: {string.Join(", ", others.Select(l => content.Leader(l).Name))} could be deployed instead (tap the Leader to deploy).");
+        }
+        else if (turn.DeployLeader is { } first && content.Leader(first).DeployFirst)
+        {
+            notes.Add("Beast Rabban and Feyd-Rautha are deployed before any other Named Leader. A Bashar is deployed only when no Named Leader is available.");
         }
 
         notes.Add("Respect the stacking limit: deploy any excess Units in another Settlement, using the same priority.");

@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using Mahdi.Engine.Commands;
+using Mahdi.Engine.Guidance;
 using Mahdi.Engine.Model;
 using Mahdi.Engine.Rules;
 
@@ -207,5 +208,99 @@ public class LeaderTests
         game.Execute(new CompleteHarkonnenTurn());
 
         Assert.That(game.State.NextDeck, Is.EqualTo(PlanningDeck.Corrino));
+    }
+    [Test]
+    public void RabbanMustBeDeployedBeforeAnyOtherNamedLeader()
+    {
+        var game = TestGame.InActionResolution(DiceMode.Physical);
+
+        game.Execute(new EnterHarkonnenDie(DieFace.Deployment));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(LeaderRules.DeployChoices(TestGame.Content, game.State), Is.EqualTo(new[] { LeaderId.BeastRabban }));
+            Assert.Throws<CommandRejectedException>(() => game.Execute(new ChooseDeployLeader(LeaderId.BaronHarkonnen)));
+        }
+    }
+
+    [Test]
+    public void PlayerChoosesWhichOtherNamedLeaderToDeploy()
+    {
+        var game = InSecondDeployment();
+        Assert.That(LeaderRules.DeployChoices(TestGame.Content, game.State),
+            Is.EquivalentTo(new[] { LeaderId.BaronHarkonnen, LeaderId.CaptainAramsham }));
+
+        game.Execute(new ChooseDeployLeader(LeaderId.CaptainAramsham));
+        Assert.That(game.State.Dice.Pending!.DeployLeader, Is.EqualTo(LeaderId.CaptainAramsham));
+        game.Execute(new CompleteHarkonnenTurn());
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(game.State.Leaders[LeaderId.CaptainAramsham].Status, Is.EqualTo(LeaderStatus.OnBoard));
+            Assert.That(game.State.Leaders[LeaderId.BaronHarkonnen].Status, Is.EqualTo(LeaderStatus.InReserve));
+        }
+    }
+
+    [Test]
+    public void DeployLeaderChoiceIsRejectedWithoutADeploymentOrForALeaderOnTheBoard()
+    {
+        var game = TestGame.InActionResolution(DiceMode.Physical);
+        Assert.Throws<CommandRejectedException>(() => game.Execute(new ChooseDeployLeader(LeaderId.BaronHarkonnen)));
+
+        game = InSecondDeployment();
+        Assert.Throws<CommandRejectedException>(() => game.Execute(new ChooseDeployLeader(LeaderId.BeastRabban)));
+    }
+
+    [Test]
+    public void DeployGuidanceNamesTheChosenLeaderAndTheAlternatives()
+    {
+        var game = InSecondDeployment();
+        var builder = new GuidanceBuilder(TestGame.Content);
+        game.Execute(new ChooseDeployLeader(LeaderId.CaptainAramsham));
+
+        var guidance = builder.Turn(game.State);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(guidance.Headline, Does.Contain("Captain Aramsham"));
+            Assert.That(guidance.Notes, Has.Some.Contains("Baron Harkonnen could be deployed instead"));
+        }
+    }
+
+    [Test]
+    public void DeployGuidanceExplainsWhyRabbanComesFirst()
+    {
+        var game = TestGame.InActionResolution(DiceMode.Physical);
+        game.Execute(new EnterHarkonnenDie(DieFace.Deployment));
+
+        var guidance = new GuidanceBuilder(TestGame.Content).Turn(game.State);
+
+        Assert.That(guidance.Notes, Has.Some.Contains("deployed before any other Named Leader"));
+    }
+
+    [Test]
+    public void LeaderInReserveCanBePlacedOnTheBoard()
+    {
+        var game = TestGame.InActionResolution(DiceMode.Physical);
+
+        game.Execute(new PlaceLeaderOnBoard(LeaderId.BaronHarkonnen));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(game.State.Leaders[LeaderId.BaronHarkonnen].Status, Is.EqualTo(LeaderStatus.OnBoard));
+            Assert.That(LeaderRules.DeployCandidates(TestGame.Content, game.State), Does.Not.Contain(LeaderId.BaronHarkonnen));
+            Assert.Throws<CommandRejectedException>(() => game.Execute(new PlaceLeaderOnBoard(LeaderId.BaronHarkonnen)));
+            Assert.Throws<CommandRejectedException>(() => game.Execute(new PlaceLeaderOnBoard(LeaderId.ThufirHawat)));
+        }
+    }
+
+    /// <summary>Rabban was deployed with Aramsham's special, so the second Deployment leaves Baron or Aramsham.</summary>
+    private static Game InSecondDeployment()
+    {
+        var game = TestGame.InActionResolution(DiceMode.Physical);
+        game.Execute(new EnterHarkonnenDie(DieFace.Deployment));
+        game.Execute(new CompleteHarkonnenTurn());
+        game.Execute(new EnterHarkonnenDie(DieFace.Deployment));
+        return game;
     }
 }

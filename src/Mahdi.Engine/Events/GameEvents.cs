@@ -28,6 +28,8 @@ namespace Mahdi.Engine.Events;
 [JsonDerivedType(typeof(BeneGesseritGained), "beneGesseritGained")]
 [JsonDerivedType(typeof(LeaderKilled), "leaderKilled")]
 [JsonDerivedType(typeof(LeaderRemovedFromGame), "leaderRemoved")]
+[JsonDerivedType(typeof(DeployLeaderChosen), "deployLeaderChosen")]
+[JsonDerivedType(typeof(LeaderPlacedOnBoard), "leaderPlacedOnBoard")]
 [JsonDerivedType(typeof(RageOvercameShaddamPlayed), "rageOvercameShaddam")]
 [JsonDerivedType(typeof(NextDeckSet), "nextDeckSet")]
 [JsonDerivedType(typeof(HawatsSchemingPlayed), "hawatsScheming")]
@@ -97,6 +99,11 @@ public sealed record BeneGesseritGained : GameEvent;
 public sealed record LeaderKilled(LeaderId Leader) : GameEvent;
 
 public sealed record LeaderRemovedFromGame(LeaderId Leader) : GameEvent;
+
+/// <summary>The player picked the Named Leader to deploy for the Deployment being resolved.</summary>
+public sealed record DeployLeaderChosen(LeaderId Leader) : GameEvent;
+
+public sealed record LeaderPlacedOnBoard(LeaderId Leader) : GameEvent;
 
 public sealed record RageOvercameShaddamPlayed : GameEvent;
 

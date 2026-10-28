@@ -46,6 +46,12 @@ public sealed record KillLeader(LeaderId Leader) : GameCommand;
 
 public sealed record RemoveLeaderFromGame(LeaderId Leader) : GameCommand;
 
+/// <summary>Deploy another Named Leader than the one suggested for the Deployment being resolved.</summary>
+public sealed record ChooseDeployLeader(LeaderId Leader) : GameCommand;
+
+/// <summary>A Named Leader in reserve was placed on the board (for example by a card effect).</summary>
+public sealed record PlaceLeaderOnBoard(LeaderId Leader) : GameCommand;
+
 public sealed record PlayRageOvercameShaddam : GameCommand;
 
 public sealed record SetNextDeck(PlanningDeck Deck) : GameCommand;

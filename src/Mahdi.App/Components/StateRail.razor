@@ -106,7 +106,7 @@
                 {
                     var ls = State.Leaders[leader.Id];
                     <li class="leader @StatusClass(ls)" data-testid="leader-@leader.Id">
-                        <button type="button" class="leader-chip" @onclick="() => ToggleLeader(leader.Id)"
+                        <button type="button" class="leader-chip" data-testid="leader-chip" @onclick="() => ToggleLeader(leader.Id)"
                                 aria-expanded="@AriaBool(selectedLeader == leader.Id)">
                             <DieIcon Face="leader.Face" Class="leader-face" />
                             <span class="leader-name">@leader.Name</span>
@@ -115,6 +115,11 @@
                         @if (selectedLeader == leader.Id)
                         {
                             <div class="leader-actions">
+                                @if (ls.Status == LeaderStatus.InReserve)
+                                {
+                                    <button type="button" class="btn btn-small" data-testid="leader-on-board"
+                                            @onclick="() => Run(new PlaceLeaderOnBoard(leader.Id))">Placed on the board</button>
+                                }
                                 @if (ls.IsActive)
                                 {
                                     <button type="button" class="btn btn-small" data-testid="leader-killed"
@@ -170,6 +175,7 @@
     private static string StatusText(LeaderState leader) => leader.Status switch
     {
         LeaderStatus.InTank => leader.TankPosition == GameReducer.TankStart ? "Tank: start" : $"Tank: {leader.TankPosition}",
+        LeaderStatus.OnBoard when leader.CardSpent => "on board, spent",
         _ when leader.CardSpent => "spent",
         LeaderStatus.OnBoard => "on board",
         _ => "ready",

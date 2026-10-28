@@ -29,4 +29,15 @@ public static class LeaderRules
             .OrderByDescending(l => l.DeployFirst)
             .Select(l => l.Id),
     ];
+
+    /// <summary>
+    /// Named Leaders the player may pick for a Deployment: Beast Rabban or Feyd-Rautha when one of them can be
+    /// deployed, otherwise any Named Leader that can be deployed.
+    /// </summary>
+    public static ImmutableArray<LeaderId> DeployChoices(GameContent content, GameState state)
+    {
+        var candidates = DeployCandidates(content, state);
+        var first = candidates.Where(id => content.Leader(id).DeployFirst).ToImmutableArray();
+        return first.IsEmpty ? candidates : first;
+    }
 }
