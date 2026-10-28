@@ -106,7 +106,7 @@
                 {
                     var ls = State.Leaders[leader.Id];
                     <li class="leader @StatusClass(ls)" data-testid="leader-@leader.Id">
-                        <button type="button" class="leader-chip" @onclick="() => ToggleLeader(leader.Id)"
+                        <button type="button" class="leader-chip" data-testid="leader-chip" @onclick="() => ToggleLeader(leader.Id)"
                                 aria-expanded="@AriaBool(selectedLeader == leader.Id)">
                             <DieIcon Face="leader.Face" Class="leader-face" />
                             <span class="leader-name">@leader.Name</span>

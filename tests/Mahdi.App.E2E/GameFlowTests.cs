@@ -253,4 +253,59 @@ public sealed class GameFlowTests(string device) : DeviceTest(device)
         await Tap("cp-close");
         await Expect(ById("battle-sheet")).ToBeVisibleAsync();
     }
+    [Test]
+    public async Task DeploymentLetsThePlayerChooseTheNamedLeader()
+    {
+        await StartGameAsync(seed: 23, physicalDice: true);
+        await AdvanceToActionsAsync();
+
+        // Beast Rabban must be deployed first, so there is nothing to choose.
+        await Tap("face-Deployment");
+        await Expect(ById("turn-guidance")).ToContainTextAsync("Beast Rabban");
+        await Expect(ById("deploy-leader")).ToHaveCountAsync(0);
+        await Tap("complete-turn");
+
+        await Tap("face-Deployment");
+        await Expect(ById("deploy-leader")).ToBeVisibleAsync();
+        await Expect(ById("deploy-leader-BaronHarkonnen")).ToHaveAttributeAsync("aria-pressed", "true");
+        await Tap("deploy-leader-CaptainAramsham");
+        await Expect(ById("deploy-leader-CaptainAramsham")).ToHaveAttributeAsync("aria-pressed", "true");
+        await Expect(ById("deploy-leader-BaronHarkonnen")).ToHaveAttributeAsync("aria-pressed", "false");
+        await Expect(ById("guidance-headline")).ToContainTextAsync("Captain Aramsham");
+        await SnapshotAsync("deploy-leader-choice");
+        await Tap("complete-turn");
+
+        await OpenRailAsync();
+        await Expect(ById("leader-CaptainAramsham")).ToContainTextAsync("on board");
+        await Expect(ById("leader-BaronHarkonnen")).ToContainTextAsync("ready");
+    }
+
+    [Test]
+    public async Task LeaderInReserveCanBeMarkedAsOnTheBoard()
+    {
+        await StartGameAsync(seed: 24, physicalDice: true);
+        await AdvanceToActionsAsync();
+        await OpenRailAsync();
+
+        await ById("leader-BaronHarkonnen").GetByTestId("leader-chip").ClickAsync();
+        await Tap("leader-on-board");
+        await Expect(ById("leader-BaronHarkonnen")).ToContainTextAsync("on board");
+
+        // Leaders on the board offer no "Placed on the board" action.
+        await ById("leader-BaronHarkonnen").GetByTestId("leader-chip").ClickAsync();
+        await Expect(ById("leader-on-board")).ToHaveCountAsync(0);
+        await Expect(ById("leader-killed")).ToBeVisibleAsync();
+        await SnapshotAsync("leader-on-board");
+
+        await Tap("undo");
+        await Expect(ById("leader-BaronHarkonnen")).ToContainTextAsync("ready");
+    }
+
+    private async Task OpenRailAsync()
+    {
+        if (IsPhone)
+        {
+            await Tap("rail-toggle");
+        }
+    }
 }
