@@ -92,6 +92,13 @@ public static class CommandHandler
                 batch.Emit(new DesertHazardsConfirmed());
                 break;
 
+            case SetImperiumMarker x:
+                Require(state.Phase == Phase.SpiceHarvesting, "Imperium markers are corrected during Spice Harvesting.");
+                Require(x.Step >= content.BottomStep && x.Step <= content.TopStep, "That step is not on The Spice Must Flow board.");
+                Require(state.Imperium[x.Power] != x.Step, "The marker is already on that step.");
+                batch.Emit(new ImperiumMarkerSet(x.Power, x.Step));
+                break;
+
             case HarvestSpice x:
                 Require(state.Phase == Phase.SpiceHarvesting, "Not in Spice Harvesting.");
                 Require(x.DesertHarvesters >= 0 && x.DeepDesertHarvesters >= 0, "Harvester counts cannot be negative.");

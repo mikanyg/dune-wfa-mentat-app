@@ -167,35 +167,4 @@ public class GuidanceTests
         var banned = game.State with { ActiveBans = [ImperiumPower.Landsraad] };
         Assert.That(GuidanceBuilder.Combat(banned).Headline, Does.Contain("Landsraad Ban"));
     }
-
-    [Test]
-    public void SpiceResultDescribesEachMarkerAndTheReserve()
-    {
-        var game = TestGame.InActionResolution();
-        TestGame.SpendAllDice(game);
-        game.Execute(new ConfirmDesertHazards());
-        game.Execute(new HarvestSpice(DesertHarvesters: 5, DeepDesertHarvesters: 0));
-
-        var guidance = GuidanceBuilder.SpiceResult(game.State.LastSpiceResult!);
-
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(guidance.Headline, Does.Contain("5 spice"));
-            Assert.That(guidance.Steps.Select(s => s.Text), Has.Some.Contains("drops to step 4"));
-            Assert.That(guidance.Notes, Has.Some.Contains("Spice Reserve token"));
-        }
-    }
-
-    [Test]
-    public void SpiceResultMentionsTheSupremacyPoint()
-    {
-        var game = TestGame.InActionResolution();
-        TestGame.SpendAllDice(game);
-        game.Execute(new ConfirmDesertHazards());
-        game.Execute(new HarvestSpice(DesertHarvesters: 1, DeepDesertHarvesters: 4));
-
-        var guidance = GuidanceBuilder.SpiceResult(game.State.LastSpiceResult!);
-
-        Assert.That(guidance.Steps.Select(s => s.Text), Has.Some.Contains("1 Supremacy point"));
-    }
 }

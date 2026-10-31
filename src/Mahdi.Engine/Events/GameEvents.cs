@@ -19,6 +19,7 @@ namespace Mahdi.Engine.Events;
 [JsonDerivedType(typeof(TruthtranceChosen), "truthtrance")]
 [JsonDerivedType(typeof(DesertHazardsConfirmed), "desertHazardsConfirmed")]
 [JsonDerivedType(typeof(SpiceHarvested), "spiceHarvested")]
+[JsonDerivedType(typeof(ImperiumMarkerSet), "imperiumMarkerSet")]
 [JsonDerivedType(typeof(RoundEnded), "roundEnded")]
 [JsonDerivedType(typeof(SietchDestroyed), "sietchDestroyed")]
 [JsonDerivedType(typeof(TargetSietchDrawn), "targetDrawn")]
@@ -70,6 +71,9 @@ public sealed record TruthtranceChosen(DieFace Face) : GameEvent;
 public sealed record DesertHazardsConfirmed : GameEvent;
 
 public sealed record SpiceHarvested(int DesertHarvesters, int DeepDesertHarvesters, SpiceResult Result) : GameEvent;
+
+/// <summary>The player moved an Imperium marker to match the board. Bans change only when spice is spent.</summary>
+public sealed record ImperiumMarkerSet(ImperiumPower Power, int Step) : GameEvent;
 
 public sealed record RoundEnded : GameEvent;
 

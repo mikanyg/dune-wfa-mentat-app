@@ -870,6 +870,121 @@ details[open] > summary::before {
     color: var(--accent);
 }
 
+/* Two input boxes side by side (harvesters, markers), stacked when narrow. */
+.spice-inputs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 12px;
+}
+
+.spice-box {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--rule-soft);
+    background: var(--surface);
+}
+
+.spice-box h3 {
+    font-size: 0.78rem;
+}
+
+.marker-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.marker-name {
+    font-weight: 600;
+    display: flex;
+    flex-direction: column;
+}
+
+.marker-changed {
+    font-weight: 400;
+    font-size: 0.75rem;
+    color: var(--highlight);
+}
+
+.marker-steps {
+    display: flex;
+    gap: 4px;
+}
+
+.marker-step {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--rule);
+    background: var(--surface-2);
+    font-family: var(--font-display);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.marker-step.below {
+    background: color-mix(in srgb, var(--accent) 25%, var(--surface-2));
+}
+
+.marker-step.selected {
+    background: var(--accent);
+    color: var(--accent-contrast);
+    border-color: var(--accent);
+}
+
+.marker-hint {
+    font-size: 0.82rem;
+}
+
+.spend-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.spend-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px dotted var(--rule-soft);
+}
+
+.spend-name {
+    font-weight: 600;
+    min-width: 8.5em;
+}
+
+.spend-steps {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    min-width: 4.5em;
+}
+
+.spend-row[data-change="Dropped"] .spend-label,
+.spend-row[data-change="StayedAtBottom"] .spend-label {
+    color: var(--harkonnen);
+    font-weight: 600;
+}
+
+.spice-summary {
+    font-weight: 600;
+    color: var(--accent-strong);
+}
+
+.step-important {
+    font-weight: 700;
+    color: var(--text);
+}
+
 /* ---------- New game ---------- */
 
 .new-game {

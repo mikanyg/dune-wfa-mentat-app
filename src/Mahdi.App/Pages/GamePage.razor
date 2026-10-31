@@ -85,7 +85,7 @@ else
                 case Phase.EndOfRound:
                     @if (state.LastSpiceResult is { } spice)
                     {
-                        <GuidanceCard Guidance="GuidanceBuilder.SpiceResult(spice)" Class="frame" TestId="spice-result" />
+                        <p class="spice-summary" data-testid="spice-summary">@GuidanceBuilder.SpiceSummary(spice)</p>
                     }
                     <GuidanceCard Guidance="Session.Guidance.EndOfRound(state)" Class="frame" TestId="end-guidance" />
                     <div class="button-row">
