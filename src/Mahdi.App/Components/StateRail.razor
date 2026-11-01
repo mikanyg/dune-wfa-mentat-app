@@ -4,7 +4,8 @@
 @using Mahdi.Engine.Model
 @inject GameSession Session
 
-@* The automa's state at a glance. On short landscape screens it collapses to an icon strip. *@
+@* The automa's state at a glance: phase stepper, Target, dice, Reinforcements, Leaders, Imperium.
+   On short landscape screens it collapses to an icon strip. *@
 <aside class="rail @(open ? "open" : "")" data-testid="state-rail">
     <button class="rail-strip" type="button" data-testid="rail-toggle" aria-expanded="@AriaBool(open)"
             aria-label="@(open ? "Hide Harkonnen status" : "Show Harkonnen status")" @onclick="() => open = !open">
@@ -23,7 +24,31 @@
     <div class="rail-body">
         <PhaseStepper Phase="State.Phase" />
 
-        <section class="rail-section">
+        <section class="rail-section rail-tactical" data-testid="rail-target">
+            <div class="rail-tactical-text">
+                <h3>Target Sietch</h3>
+                <p class="rail-value" data-testid="target-sietch">@TargetName</p>
+                @if (TargetCard is { } target)
+                {
+                    <p class="rail-sub" data-testid="target-sector">@GuidanceBuilder.SectorName(target.Sector)</p>
+                }
+                <h3>Harvesting Sector</h3>
+                <p class="rail-value small" data-testid="harvest-sector">@Session.Guidance.HarvestSectorName(State)</p>
+            </div>
+            @if (HasCards)
+            {
+                <figure class="rail-map">
+                    <SectorMap Harvest="HarvestSector" Target="TargetCard?.Sector" Pin="TargetCard?.Pin" Labels="true" TestId="rail-map" />
+                    <figcaption class="map-legend">
+                        <span><span class="swatch swatch-harvest"></span>Harvest</span>
+                        <span><span class="swatch swatch-target"></span>Target</span>
+                        <span><span class="swatch swatch-pin"></span>Sietch</span>
+                    </figcaption>
+                </figure>
+            }
+        </section>
+
+        <section class="rail-section" data-testid="rail-dice">
             <h3>Harkonnen dice</h3>
             <div class="dice-pips" data-testid="dice-unused" data-count="@State.Dice.Unused"
                  aria-label="@($"{State.Dice.Unused} unused dice")">
@@ -52,31 +77,7 @@
             }
         </section>
 
-        <section class="rail-section rail-tactical">
-            <div class="rail-tactical-text">
-                <h3>Target Sietch</h3>
-                <p class="rail-value" data-testid="target-sietch">@TargetName</p>
-                @if (TargetCard is { } target)
-                {
-                    <p class="rail-sub" data-testid="target-sector">@GuidanceBuilder.SectorName(target.Sector)</p>
-                }
-                <h3>Harvesting Sector</h3>
-                <p class="rail-value small" data-testid="harvest-sector">@Session.Guidance.HarvestSectorName(State)</p>
-            </div>
-            @if (HasCards)
-            {
-                <figure class="rail-map">
-                    <SectorMap Harvest="HarvestSector" Target="TargetCard?.Sector" Pin="TargetCard?.Pin" Labels="true" TestId="rail-map" />
-                    <figcaption class="map-legend">
-                        <span><span class="swatch swatch-harvest"></span>Harvest</span>
-                        <span><span class="swatch swatch-target"></span>Target</span>
-                        <span><span class="swatch swatch-pin"></span>Sietch</span>
-                    </figcaption>
-                </figure>
-            }
-        </section>
-
-        <section class="rail-section">
+        <section class="rail-section" data-testid="rail-reinforcements">
             <h3>Reinforcements</h3>
             <div class="rail-row">
                 <span class="card-stack" data-testid="reinforcements" data-count="@State.Reinforcements">
@@ -94,37 +95,7 @@
             }
         </section>
 
-        <section class="rail-section">
-            <h3>Imperium</h3>
-            @foreach (var power in Enum.GetValues<ImperiumPower>())
-            {
-                var step = State.Imperium[power];
-                <div class="imperium-row @(State.IsBanActive(power) ? "banned" : "")" data-testid="imperium-@power">
-                    <span class="imperium-name">@Session.Content.Ban(power).Name</span>
-                    <span class="imperium-steps" aria-label="@($"step {step} of {Session.Content.TopStep}")">
-                        @for (var s = Session.Content.BottomStep; s <= Session.Content.TopStep; s++)
-                        {
-                            <span class="step @(s <= step ? "on" : "")"></span>
-                        }
-                    </span>
-                </div>
-            }
-            @if (!State.ActiveBans.IsEmpty)
-            {
-                <div class="ban-chips">
-                    @foreach (var power in State.ActiveBans)
-                    {
-                        <span class="chip chip-ban" title="@Session.Content.Ban(power).SoloEffect">@Session.Content.Ban(power).Name Ban</span>
-                    }
-                </div>
-            }
-            @if (State.SpiceReserve > 0)
-            {
-                <p class="rail-note">Spice Reserve: 1</p>
-            }
-        </section>
-
-        <section class="rail-section">
+        <section class="rail-section" data-testid="rail-leaders">
             <h3>Leaders</h3>
             <ul class="leader-list">
                 @foreach (var leader in Session.Content.Leaders.Where(l => State.Leaders[l.Id].Status is not (LeaderStatus.NotInPlay or LeaderStatus.Removed)))
@@ -157,6 +128,36 @@
                     </li>
                 }
             </ul>
+        </section>
+
+        <section class="rail-section" data-testid="rail-imperium">
+            <h3>Imperium</h3>
+            @foreach (var power in Enum.GetValues<ImperiumPower>())
+            {
+                var step = State.Imperium[power];
+                <div class="imperium-row @(State.IsBanActive(power) ? "banned" : "")" data-testid="imperium-@power">
+                    <span class="imperium-name">@Session.Content.Ban(power).Name</span>
+                    <span class="imperium-steps" aria-label="@($"step {step} of {Session.Content.TopStep}")">
+                        @for (var s = Session.Content.BottomStep; s <= Session.Content.TopStep; s++)
+                        {
+                            <span class="step @(s <= step ? "on" : "")"></span>
+                        }
+                    </span>
+                </div>
+            }
+            @if (!State.ActiveBans.IsEmpty)
+            {
+                <div class="ban-chips">
+                    @foreach (var power in State.ActiveBans)
+                    {
+                        <span class="chip chip-ban" title="@Session.Content.Ban(power).SoloEffect">@Session.Content.Ban(power).Name Ban</span>
+                    }
+                </div>
+            }
+            @if (State.SpiceReserve > 0)
+            {
+                <p class="rail-note">Spice Reserve: 1</p>
+            }
         </section>
 
         @if (ChildContent is not null)
