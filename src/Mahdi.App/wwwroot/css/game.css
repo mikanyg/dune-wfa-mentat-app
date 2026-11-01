@@ -95,6 +95,13 @@
     min-width: 1.5ch;
 }
 
+/* Shown instead of the track when the header is too narrow for it. */
+.supremacy-max {
+    display: none;
+    font-weight: 400;
+    color: var(--text-muted);
+}
+
 /* The main action button stays reachable at the bottom when the instructions are long. */
 .stage > .btn-big,
 .stage > .button-row,
@@ -1702,6 +1709,64 @@ details[open] > summary::before {
 
     .status-bar .supremacy-label {
         display: none;
+    }
+}
+
+/* Narrow screens (portrait phones, small phones on their side): during a game the title shrinks to its diamond
+   (still the link home), so the phase, Supremacy and buttons fit. The phase name may wrap onto two lines. */
+@media (max-width: 760px) {
+    .shell-header {
+        gap: 8px;
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .shell-header:has(.status-bar) .shell-title-text,
+    .shell-header:has(.status-bar) .spacer {
+        display: none;
+    }
+
+    .shell-header:has(.status-bar) .shell-title .diamond {
+        margin-right: 0;
+    }
+
+    .status-bar {
+        flex: 1;
+        gap: 10px;
+        justify-content: space-between;
+    }
+
+    .status-phase {
+        min-width: 0;
+        white-space: normal;
+        line-height: 1.15;
+        font-size: 0.85rem;
+    }
+}
+
+/* Very narrow screens: the round goes above the phase name, and Supremacy shows as "4/10" instead of the track. */
+@media (max-width: 520px) {
+    .status-phase {
+        font-size: 0.8rem;
+        letter-spacing: 0.03em;
+    }
+
+    .status-round {
+        display: block;
+    }
+
+    .status-sep {
+        display: none;
+    }
+}
+
+@media (max-width: 520px) {
+    .supremacy-track {
+        display: none;
+    }
+
+    .supremacy-max {
+        display: inline;
     }
 }
 
