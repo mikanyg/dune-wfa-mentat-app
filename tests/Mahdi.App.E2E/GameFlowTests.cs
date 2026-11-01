@@ -215,6 +215,38 @@ public sealed partial class GameFlowTests(string device) : DeviceTest(device)
     }
 
     [Test]
+    public async Task RailMapShowsTheHarvestingSectorAndTheTargetSietch()
+    {
+        await StartGameAsync(seed: 11);
+        await Expect(ById("rail-map")).ToHaveCountAsync(0); // no Tactical cards drawn yet
+        await AdvanceToActionsAsync();
+
+        if (IsPhone)
+        {
+            // The icon strip shows a small map; tapping the strip opens the full rail.
+            await Expect(ById("strip-map")).ToBeVisibleAsync();
+            await Tap("rail-toggle");
+        }
+
+        var map = ById("rail-map");
+        await Expect(map).ToBeVisibleAsync();
+        var harvest = await map.GetAttributeAsync("data-harvest");
+        var target = await map.GetAttributeAsync("data-target");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(harvest, Is.Not.Null.And.Not.Empty);
+            Assert.That(target, Is.Not.Null.And.Not.Empty);
+            Assert.That(target, Is.Not.EqualTo(harvest), "the Target card is redrawn when it shows the Harvesting Sector");
+            Assert.That(await map.GetAttributeAsync("data-pin"), Does.Match(PinPattern()));
+        }
+
+        await SnapshotAsync("rail-map");
+    }
+
+    [GeneratedRegex(@"^\d+,\d+$")]
+    private static partial Regex PinPattern();
+
+    [Test]
     public async Task CombatPowerLinkOnTheDeploymentCardOpensTheHelp()
     {
         await StartGameAsync(seed: 21, physicalDice: true);
