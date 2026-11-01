@@ -58,7 +58,7 @@ public sealed partial class GameFlowTests(string device) : DeviceTest(device)
         await Tap("confirm-phase");
         await ExpectPhaseAsync("RoundStart");
         await Expect(ById("supremacy")).ToHaveAttributeAsync("data-value", "1");
-        await Expect(ById("phase")).ToContainTextAsync("Round 2");
+        await Expect(ById("round")).ToHaveTextAsync("Round 2");
 
         // Supremacy step 1 brings Thufir Hawat into play.
         await Expect(ById("leader-ThufirHawat")).ToHaveCountAsync(1);
@@ -152,11 +152,7 @@ public sealed partial class GameFlowTests(string device) : DeviceTest(device)
         await Expect(ById("card-picker")).ToHaveCountAsync(0);
         await Expect(Page.GetByText("New Target Sietch: Tasmin Sink")).ToBeVisibleAsync();
         await Expect(ById("face-picker")).ToBeVisibleAsync();
-        if (IsPhone)
-        {
-            await Tap("rail-toggle");
-        }
-
+        await OpenTargetsAsync();
         await Expect(ById("target-sietch")).ToHaveTextAsync("Tasmin Sink");
     }
 
@@ -165,7 +161,9 @@ public sealed partial class GameFlowTests(string device) : DeviceTest(device)
     {
         await StartGameAsync(seed: 14);
         await AdvanceToActionsAsync();
+        await OpenTargetsAsync();
         var target = await ById("target-sietch").TextContentAsync();
+        await CloseTargetsAsync();
 
         await Tap("open-sietch");
         await Expect(ById("event-sheet")).ToBeVisibleAsync();
@@ -175,8 +173,48 @@ public sealed partial class GameFlowTests(string device) : DeviceTest(device)
 
         await Expect(ById("event-sheet")).ToHaveCountAsync(0);
         await Expect(ById("supremacy")).ToHaveAttributeAsync("data-value", "2");
-        await Expect(ById("target-sietch")).Not.ToHaveTextAsync(target!);
         await Expect(Page.GetByText("New Target Sietch")).ToBeVisibleAsync();
+        await OpenTargetsAsync();
+        await Expect(ById("target-sietch")).Not.ToHaveTextAsync(target!);
+    }
+
+    [Test]
+    public async Task HarkonnenTargetsOpensBothTacticalCards()
+    {
+        await StartGameAsync(seed: 11);
+        await AdvanceToActionsAsync();
+        await OpenTargetsAsync();
+
+        await Expect(ById("tc-harvest")).ToContainTextAsync("Harvesting Sector");
+        await Expect(ById("harvest-sector")).ToHaveTextAsync("North-West Sector");
+        await Expect(ById("tc-target")).ToContainTextAsync("Target Sietch");
+        await Expect(ById("target-sietch")).ToHaveTextAsync("Sihaya Ridge");
+        await SnapshotAsync("harkonnen-targets");
+
+        await Tap("tc-close");
+        await Expect(ById("tc-sheet")).ToHaveCountAsync(0);
+    }
+
+    /// <summary>Opens the Harkonnen Targets sheet from the rail (sliding the rail out on the phone first).</summary>
+    private async Task OpenTargetsAsync()
+    {
+        if (IsPhone && await ById("open-targets").IsHiddenAsync())
+        {
+            await Tap("rail-toggle");
+        }
+
+        await Tap("open-targets");
+        await Expect(ById("tc-sheet")).ToBeVisibleAsync();
+    }
+
+    /// <summary>Closes the Harkonnen Targets sheet and, on the phone, slides the rail back in.</summary>
+    private async Task CloseTargetsAsync()
+    {
+        await Tap("tc-close");
+        if (IsPhone && await ById("open-targets").IsVisibleAsync())
+        {
+            await Tap("rail-toggle");
+        }
     }
 
     [Test]
@@ -257,17 +295,63 @@ public sealed partial class GameFlowTests(string device) : DeviceTest(device)
 
         if (IsPhone)
         {
-            await Expect(ById("target-sietch")).ToBeHiddenAsync();
+            await Expect(ById("rail-map")).ToBeHiddenAsync();
             await Tap("rail-toggle");
-            await Expect(ById("target-sietch")).ToBeVisibleAsync();
+            await Expect(ById("rail-map")).ToBeVisibleAsync();
             await SnapshotAsync("rail-open");
         }
         else
         {
             await Expect(ById("rail-toggle")).ToBeHiddenAsync();
-            await Expect(ById("target-sietch")).ToBeVisibleAsync();
+            await Expect(ById("rail-map")).ToBeVisibleAsync();
         }
     }
+
+    [Test]
+    public async Task PhaseStepperFollowsTheRound()
+    {
+        await StartGameAsync(seed: 11);
+        await Tap("confirm-phase");
+        await Tap("confirm-phase");
+        await ExpectPhaseAsync("VehiclePlacement");
+        if (IsPhone)
+        {
+            await Tap("rail-toggle");
+        }
+
+        await Expect(ById("phase-stepper")).ToBeVisibleAsync();
+        await Expect(ById("step-VehiclePlacement")).ToHaveAttributeAsync("aria-current", "step");
+        await Expect(ById("step-VehiclePlacement")).ToHaveAttributeAsync("data-owner", "Harkonnen");
+        await Expect(ById("step-RoundStart")).ToHaveClassAsync(DoneStep());
+        await Expect(ById("step-DesertHazards")).ToHaveAttributeAsync("data-owner", "Atreides");
+        await Expect(ById("step-DesertHazards")).Not.ToHaveAttributeAsync("aria-current", "step");
+        await SnapshotAsync("phase-stepper");
+    }
+
+    [GeneratedRegex(@"\bdone\b")]
+    private static partial Regex DoneStep();
+
+    [Test]
+    public async Task RailShowsTheTargetFirstAndTheImperiumLast()
+    {
+        await StartGameAsync(seed: 11);
+        await AdvanceToActionsAsync();
+        if (IsPhone)
+        {
+            await Tap("rail-toggle");
+        }
+
+        var tops = new List<float>();
+        foreach (var id in RailOrder)
+        {
+            tops.Add((await ById(id).BoundingBoxAsync())!.Y);
+        }
+
+        Assert.That(tops, Is.Ordered.Ascending, string.Join(", ", RailOrder));
+    }
+
+    private static readonly string[] RailOrder =
+        ["phase-stepper", "rail-target", "rail-dice", "rail-reinforcements", "rail-leaders", "rail-imperium"];
 
     [Test]
     public async Task RailMapShowsTheHarvestingSectorAndTheTargetSietch()

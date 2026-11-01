@@ -1,3 +1,4 @@
+@using Mahdi.Engine.Guidance
 @using Mahdi.Engine.Model
 @inject GameSession Session
 @inject NavigationManager Navigation
@@ -6,13 +7,30 @@
 @if (Session.State is { } state && OnGamePage)
 {
     <div class="status-bar" data-testid="status-bar">
-        <span class="status-phase" data-testid="phase" data-phase="@state.Phase">
+        @* The phase label sits in the centre of the header on wider screens; the round stays here.
+           Full name on wide screens, short name on tablets and phones, the stepper badge on the smallest. *@
+        <span class="status-phase">
             @if (state.Round > 0)
             {
-                <span class="status-round">Round @state.Round</span>
+                <span class="status-round" data-testid="round">Round @state.Round</span>
                 <span class="status-sep">·</span>
             }
-            @PhaseName(state.Phase)
+            @{ var label = PhaseLabel.For(state.Phase); }
+            <span class="phase-label" data-testid="phase" data-phase="@state.Phase" data-owner="@label.Owner" title="@label.FullTitle">
+                <span class="phase-full">
+                    @if (label.Number is { } number)
+                    {
+                        <span class="phase-number">Phase @number:</span>@Space
+                    }
+                    <span class="phase-name">@label.Name</span>
+                    @if (label.Owner != PhaseOwner.Both)
+                    {
+                        @Space<span class="phase-owner">(@label.Owner)</span>
+                    }
+                </span>
+                <span class="phase-short">@label.ShortTitle</span>
+                <span class="phase-badge">@(label.Badge ?? label.ShortName)</span>
+            </span>
         </span>
         <span class="supremacy" data-testid="supremacy" data-value="@state.Supremacy"
               aria-label="@($"Harkonnen Supremacy {state.Supremacy} of {Session.Content.Supremacy.Max}")">
@@ -31,18 +49,10 @@
 @code {
     private bool OnGamePage => Navigation.ToBaseRelativePath(Navigation.Uri).StartsWith("game", StringComparison.OrdinalIgnoreCase);
 
-    public static string PhaseName(Phase phase) => phase switch
-    {
-        Phase.Setup => "Setup",
-        Phase.RoundStart => "Start of Round",
-        Phase.VehiclePlacement => "Vehicle Placement",
-        Phase.ActionResolution => "Action Resolution",
-        Phase.DesertHazards => "Desert Hazards",
-        Phase.SpiceHarvesting => "Spice Harvesting",
-        Phase.EndOfRound => "End of Round",
-        Phase.GameOver => "Game Over",
-        _ => phase.ToString(),
-    };
+    public static string PhaseName(Phase phase) => PhaseLabel.For(phase).Name;
+
+    /// <summary>Blazor drops whitespace between elements; the label needs real spaces (screen readers, copied text).</summary>
+    private const string Space = " ";
 
     protected override void OnInitialized()
     {

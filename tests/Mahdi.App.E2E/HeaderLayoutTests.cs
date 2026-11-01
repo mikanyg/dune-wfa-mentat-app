@@ -1,28 +1,47 @@
+using System.Text.RegularExpressions;
 using Microsoft.Playwright;
 
 namespace Mahdi.App.E2E;
 
 /// <summary>
-/// The header must fit on small phones too, in both orientations: nothing overlaps and nothing leaves the screen.
+/// The header must fit on small phones too, in both orientations, and on a wide desktop window (where the phase label
+/// moves to the centre): nothing overlaps and nothing leaves the screen.
 /// </summary>
 [TestFixture("iPhone SE")]
 [TestFixture("iPhone SE landscape")]
 [TestFixture("Galaxy S8")]
 [TestFixture("iPhone 15 Pro")]
 [TestFixture("iPhone 15 Pro landscape")]
+[TestFixture("iPad Pro 11 landscape")]
+[TestFixture("Desktop 1500x900")]
+[TestFixture("Desktop 1920x1080")]
 [Parallelizable(ParallelScope.Self)]
-public sealed class HeaderLayoutTests(string device) : AppTest(device)
+public sealed partial class HeaderLayoutTests(string device) : AppTest(device)
 {
-    private static readonly string[] HeaderItems = ["home-link", "phase", "supremacy", "undo", "theme-toggle"];
+    private static readonly string[] HeaderItems = ["home-link", "round", "phase", "supremacy", "undo", "theme-toggle"];
 
-    /// <summary>The phase name may be shortened with an ellipsis, but must stay readable.</summary>
-    private const float MinPhaseWidth = 60;
+    /// <summary>The phase label must stay readable: at least the stepper badge.</summary>
+    private const float MinPhaseWidth = 16;
+
+    /// <summary>From this width the phase label sits in the centre of the header (game.css).</summary>
+    private const int CentredFrom = 1000;
+
+    /// <summary>From this width the full phase name is shown; below, the short name.</summary>
+    private const int FullNameFrom = 1500;
+
+    /// <summary>Up to this width the phase shows as its stepper badge.</summary>
+    private const int BadgeUpTo = 520;
+
+    [GeneratedRegex(@"^\s*Phase 1:\s+Vehicle Placement\s+\(Harkonnen\)\s*$")]
+    private static partial Regex FullVehicleLabel();
 
     [Test]
     public async Task HeaderItemsFitWithoutOverlapping()
     {
         await StartGameAsync(seed: 11);
-        await AdvanceToActionsAsync(); // "Round 1 · Action Resolution" is one of the longest headers
+        await Tap("confirm-phase");
+        await Tap("confirm-phase"); // Vehicle Placement: the longest label, "Phase 1: Vehicle Placement (Harkonnen)"
+        await ExpectPhaseAsync("VehiclePlacement");
         await SnapshotAsync("header");
 
         var viewport = Page.ViewportSize!;
@@ -50,7 +69,26 @@ public sealed class HeaderLayoutTests(string device) : AppTest(device)
                 }
             }
 
-            Assert.That(boxes.Single(b => b.Id == "phase").Box.Width, Is.GreaterThanOrEqualTo(MinPhaseWidth), "phase name is squeezed away");
+            var phase = boxes.Single(b => b.Id == "phase").Box;
+            Assert.That(phase.Width, Is.GreaterThanOrEqualTo(MinPhaseWidth), "phase name is squeezed away");
+            if (viewport.Width >= CentredFrom)
+            {
+                Assert.That(phase.X + (phase.Width / 2), Is.EqualTo(viewport.Width / 2f).Within(2), "the phase label is centred");
+            }
+        }
+
+        var visibleText = new LocatorAssertionsToHaveTextOptions { UseInnerText = true };
+        if (viewport.Width >= FullNameFrom)
+        {
+            await Expect(ById("phase")).ToHaveTextAsync(FullVehicleLabel(), visibleText);
+        }
+        else if (viewport.Width > BadgeUpTo)
+        {
+            await Expect(ById("phase")).ToHaveTextAsync("1: Vehicles", visibleText);
+        }
+        else
+        {
+            await Expect(ById("phase")).ToHaveTextAsync("1", visibleText);
         }
     }
 
