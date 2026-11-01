@@ -104,6 +104,7 @@ public class GuidanceTests
         game.Execute(new ConfirmDesertHazards());
         game.Execute(new HarvestSpice(0, 0));
         game.Execute(new EndRound());
+        TestGame.EnterCardsIfNeeded(game);
         game.Execute(new ConfirmRoundStart());
         game.Execute(new ConfirmVehicles());
 

@@ -85,7 +85,11 @@ public sealed partial class BattleFlowTests(string device) : DeviceTest(device)
         await Expect(ById("supremacy")).ToHaveAttributeAsync("data-value", "2");
         await Expect(ById("reinforcements")).ToHaveAttributeAsync("data-count", "0");
         await Expect(ById("next-deck")).ToContainTextAsync("Harkonnen"); // last discard was Corrino
-        await Expect(Page.GetByText("New Target Sietch")).ToBeVisibleAsync();
+
+        // Player-driven: the player draws the new Target card and taps it.
+        await Expect(ById("card-picker")).ToHaveAttributeAsync("data-mode", "target");
+        await Tap("pick-tasmin-sink");
+        await Expect(Page.GetByText("New Target Sietch: Tasmin Sink")).ToBeVisibleAsync();
     }
 
     [TestCase("AttackerCeased", "0")]

@@ -1,6 +1,7 @@
 using Mahdi.Engine.Commands;
 using Mahdi.Engine.Content;
 using Mahdi.Engine.Model;
+using Mahdi.Engine.Rules;
 
 namespace Mahdi.Engine.Tests;
 
@@ -28,9 +29,30 @@ internal static class TestGame
     {
         var game = New(mode, seed);
         game.Execute(new CompleteSetup());
+        if (mode == DiceMode.Physical)
+        {
+            EnterCardsAsTheAppWouldDraw(game, seed);
+        }
+
         game.Execute(new ConfirmRoundStart());
         game.Execute(new ConfirmVehicles());
         return game;
+    }
+
+    /// <summary>
+    /// Player-driven: enters the Tactical cards the app would have drawn with this seed (setup is command 0), so
+    /// player-driven test games play on the same cards as app-driven ones.
+    /// </summary>
+    public static void EnterCardsAsTheAppWouldDraw(Game game, int seed)
+    {
+        var round = TacticalDeck.DrawRound(Content, GameReducer.Initial(Content, DiceMode.AppRolls), new SeededRandomSource(seed, 0), 1);
+        game.Execute(new EnterHarvestCard(round.HarvestCardId!));
+        foreach (var rejected in round.Rejected)
+        {
+            game.Execute(new EnterTargetCard(rejected));
+        }
+
+        game.Execute(new EnterTargetCard(round.TargetCardId!));
     }
 
     /// <summary>Plays out the rest of the Action Resolution phase with the given face (physical mode).</summary>
@@ -64,6 +86,7 @@ internal static class TestGame
         {
             if (game.State.Phase == Phase.RoundStart)
             {
+                EnterCardsIfNeeded(game);
                 game.Execute(new ConfirmRoundStart());
                 game.Execute(new ConfirmVehicles());
             }
@@ -72,6 +95,25 @@ internal static class TestGame
             game.Execute(new ConfirmDesertHazards());
             game.Execute(new HarvestSpice(0, 3));
             game.Execute(new EndRound());
+        }
+
+        EnterCardsIfNeeded(game);
+    }
+
+    /// <summary>Player-driven: enters a Harvesting card and the first eligible Target card if they are still missing.</summary>
+    public static void EnterCardsIfNeeded(Game game)
+    {
+        if (TacticalDeck.AwaitingHarvest(game.State))
+        {
+            game.Execute(new EnterHarvestCard("rock-outcroppings"));
+        }
+
+        while (TacticalDeck.AwaitingTarget(Content, game.State))
+        {
+            var tactical = game.State.Tactical;
+            var harvest = Content.Card(tactical.HarvestCardId!).Sector;
+            var remaining = TacticalDeck.Remaining(Content, tactical);
+            game.Execute(new EnterTargetCard(remaining.First(id => TacticalDeck.IsEligibleTarget(Content, tactical, id, harvest))));
         }
     }
 }

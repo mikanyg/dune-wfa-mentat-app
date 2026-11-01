@@ -106,6 +106,61 @@ public sealed partial class GameFlowTests(string device) : DeviceTest(device)
     }
 
     [Test]
+    public async Task PlayerDrivenModeEntersTheTacticalCardsThePlayerDraws()
+    {
+        await OpenAsync("new?seed=40");
+        await Expect(ById("mode-physical")).ToContainTextAsync("Player-driven");
+        await Tap("mode-physical");
+        await Tap("start-game");
+        await Tap("confirm-phase");
+        await ExpectPhaseAsync("RoundStart");
+
+        // Step 1: the Harvesting Sector card.
+        await Expect(ById("card-picker")).ToHaveAttributeAsync("data-mode", "harvest");
+        await Expect(ById("confirm-phase")).ToHaveCountAsync(0);
+        await SnapshotAsync("picker-harvest");
+        await Tap("pick-rock-outcroppings");
+
+        // Step 2: the Target card. A card in the Harvesting Sector is discarded and the player draws again.
+        await Expect(ById("card-picker")).ToHaveAttributeAsync("data-mode", "target");
+        await Expect(ById("pick-rock-outcroppings")).ToBeDisabledAsync();
+        await Expect(ById("pick-bight-of-the-cliff")).ToHaveAttributeAsync("data-state", "same-sector");
+        await Tap("pick-bight-of-the-cliff");
+        await Expect(ById("picker-warning")).ToContainTextAsync("shows the Harvesting Sector");
+        await Expect(ById("pick-bight-of-the-cliff")).ToHaveAttributeAsync("data-state", "discarded");
+        await SnapshotAsync("picker-target");
+        await Tap("pick-gara-kulon");
+
+        await Expect(ById("card-picker")).ToHaveCountAsync(0);
+        await Expect(ById("target-card")).ToContainTextAsync("Gara Kulon");
+        await Expect(ById("round-guidance")).ToContainTextAsync("Bight-of-the-Cliff");
+        await Tap("confirm-phase");
+        await ExpectPhaseAsync("VehiclePlacement");
+        await Tap("confirm-phase");
+        await ExpectPhaseAsync("ActionResolution");
+
+        // The Target Sietch falls: the player draws the new Target card before the next Harkonnen turn.
+        await Tap("open-sietch");
+        await Tap("sietch-gara-kulon");
+        await Tap("rank-1");
+        await Expect(ById("card-picker")).ToHaveAttributeAsync("data-mode", "target");
+        await Expect(ById("face-picker")).ToHaveCountAsync(0);
+        await Expect(ById("pick-gara-kulon")).ToHaveAttributeAsync("data-state", "discarded");
+        await SnapshotAsync("picker-redraw");
+        await Tap("pick-tasmin-sink");
+
+        await Expect(ById("card-picker")).ToHaveCountAsync(0);
+        await Expect(Page.GetByText("New Target Sietch: Tasmin Sink")).ToBeVisibleAsync();
+        await Expect(ById("face-picker")).ToBeVisibleAsync();
+        if (IsPhone)
+        {
+            await Tap("rail-toggle");
+        }
+
+        await Expect(ById("target-sietch")).ToHaveTextAsync("Tasmin Sink");
+    }
+
+    [Test]
     public async Task DestroyingTheTargetSietchDrawsANewTarget()
     {
         await StartGameAsync(seed: 14);
