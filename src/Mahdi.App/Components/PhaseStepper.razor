@@ -1,0 +1,44 @@
+@using Mahdi.Engine.Guidance
+@using Mahdi.Engine.Model
+
+@* Where the round stands: Start of Round, Phases 1-4, End of Round. Harkonnen-only phases have a red ring,
+   the Atreides-only phase a green one; the current phase is filled. *@
+<ol class="phase-stepper" data-testid="phase-stepper" aria-label="Phases of the round">
+    @foreach (var phase in PhaseLabel.RoundPhases)
+    {
+        var label = PhaseLabel.For(phase);
+        var state = StepState(phase);
+        <li class="stepper-step @state" data-testid="step-@phase" data-owner="@label.Owner" title="@label.FullTitle"
+            aria-current="@(state == "current" ? "step" : null)">
+            <span class="stepper-badge">@label.Badge</span>
+            <span class="stepper-name">@StepName(label)</span>
+        </li>
+    }
+</ol>
+
+@code {
+    [Parameter, EditorRequired]
+    public Phase Phase { get; set; }
+
+    private string StepState(Phase step)
+    {
+        if (Phase == Phase.GameOver)
+        {
+            return "done";
+        }
+
+        var current = IndexOf(Phase);
+        var index = IndexOf(step);
+        if (current < 0 || index > current)
+        {
+            return "";
+        }
+
+        return index == current ? "current" : "done";
+    }
+
+    /// <summary>One word under the badge: Start, Vehicles, Actions, Hazards, Harvest, End.</summary>
+    private static string StepName(PhaseLabel label) => label.ShortName.Split(' ')[0];
+
+    private static int IndexOf(Phase phase) => PhaseLabel.RoundPhases.ToList().IndexOf(phase);
+}

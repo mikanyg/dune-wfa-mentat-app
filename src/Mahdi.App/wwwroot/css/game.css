@@ -57,13 +57,14 @@
     color: var(--rule);
 }
 
-/* Narrower screens show only the phase name after the round; wide screens add the number and owner. */
+/* The phase label: full name (>= 1500px), short name ("1: Vehicles"), or the stepper badge (<= 520px).
+   From 1000px it sits in the centre of the header; below that it follows the round. */
 .phase-label {
     display: inline-block; /* wraps as a block, never around the round */
 }
 
-.phase-number,
-.phase-owner {
+.phase-full,
+.phase-badge {
     display: none;
 }
 
@@ -79,9 +80,7 @@
     color: var(--atreides);
 }
 
-/* Wide screens: the full phase label sits in the centre of the header; the round stays on the right.
-   Below 1500px the longest label would run into the round and Supremacy. */
-@media (min-width: 1500px) {
+@media (min-width: 1000px) {
     .phase-label {
         position: absolute;
         left: 50%;
@@ -90,14 +89,115 @@
         white-space: nowrap;
     }
 
-    .phase-number,
-    .phase-owner {
-        display: inline;
-    }
-
     .status-sep {
         display: none;
     }
+}
+
+/* Below 1500px the longest full label would run into the round and Supremacy. */
+@media (min-width: 1500px) {
+    .phase-full {
+        display: inline;
+    }
+
+    .phase-short {
+        display: none;
+    }
+}
+
+/* ---------- Phase stepper (top of the rail) ---------- */
+
+.phase-stepper {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 3px;
+    margin: 0;
+    padding: 0 0 12px;
+    list-style: none;
+    border-bottom: 1px solid var(--rule-soft);
+}
+
+.stepper-step {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    min-width: 0;
+}
+
+/* The connector line to the previous step. */
+.stepper-step + .stepper-step::before {
+    content: "";
+    position: absolute;
+    top: 13px;
+    right: calc(50% + 14px);
+    width: calc(100% - 28px);
+    height: 2px;
+    background: var(--rule-soft);
+}
+
+.stepper-step.done + .stepper-step::before,
+.stepper-step.done + .stepper-step.current::before {
+    background: var(--accent);
+}
+
+.stepper-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--rule);
+    background: var(--surface);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.stepper-step[data-owner="Harkonnen"] .stepper-badge {
+    border-color: var(--harkonnen);
+}
+
+.stepper-step[data-owner="Atreides"] .stepper-badge {
+    border-color: var(--atreides);
+}
+
+.stepper-step.done .stepper-badge {
+    color: var(--text);
+}
+
+.stepper-step.current .stepper-badge {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--surface);
+}
+
+.stepper-step.current[data-owner="Harkonnen"] .stepper-badge {
+    background: var(--harkonnen);
+    border-color: var(--harkonnen);
+}
+
+.stepper-step.current[data-owner="Atreides"] .stepper-badge {
+    background: var(--atreides);
+    border-color: var(--atreides);
+}
+
+.stepper-name {
+    font-size: 0.6rem;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.stepper-step.current .stepper-name {
+    color: var(--text);
+    font-weight: 700;
 }
 
 .supremacy {
@@ -1989,19 +2089,28 @@ details[open] > summary::before {
     }
 }
 
-/* Very narrow screens: the round goes above the phase name, and Supremacy shows as "4/10" instead of the track. */
+/* Very narrow screens: the phase shows as its stepper badge (S, 1-4, E), and Supremacy as "4/10". */
 @media (max-width: 520px) {
-    .status-phase {
-        font-size: 0.8rem;
-        letter-spacing: 0.03em;
-    }
-
-    .status-round {
-        display: block;
-    }
-
-    .status-sep {
+    .phase-short {
         display: none;
+    }
+
+    .phase-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.7em;
+        height: 1.7em;
+        border-radius: 50%;
+        border: 2px solid var(--rule);
+    }
+
+    .phase-label[data-owner="Harkonnen"] .phase-badge {
+        border-color: var(--harkonnen);
+    }
+
+    .phase-label[data-owner="Atreides"] .phase-badge {
+        border-color: var(--atreides);
     }
 }
 

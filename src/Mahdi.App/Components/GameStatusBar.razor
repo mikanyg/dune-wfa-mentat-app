@@ -7,7 +7,8 @@
 @if (Session.State is { } state && OnGamePage)
 {
     <div class="status-bar" data-testid="status-bar">
-        @* On wide screens the phase label moves to the centre of the header; the round stays here. *@
+        @* The phase label sits in the centre of the header on wider screens; the round stays here.
+           Full name on wide screens, short name on tablets and phones, the stepper badge on the smallest. *@
         <span class="status-phase">
             @if (state.Round > 0)
             {
@@ -16,15 +17,19 @@
             }
             @{ var label = PhaseLabel.For(state.Phase); }
             <span class="phase-label" data-testid="phase" data-phase="@state.Phase" data-owner="@label.Owner" title="@label.FullTitle">
-                @if (label.Number is { } number)
-                {
-                    <span class="phase-number">Phase @number:</span>@Space
-                }
-                <span class="phase-name">@label.Name</span>
-                @if (label.Owner != PhaseOwner.Both)
-                {
-                    @Space<span class="phase-owner">(@label.Owner)</span>
-                }
+                <span class="phase-full">
+                    @if (label.Number is { } number)
+                    {
+                        <span class="phase-number">Phase @number:</span>@Space
+                    }
+                    <span class="phase-name">@label.Name</span>
+                    @if (label.Owner != PhaseOwner.Both)
+                    {
+                        @Space<span class="phase-owner">(@label.Owner)</span>
+                    }
+                </span>
+                <span class="phase-short">@label.ShortTitle</span>
+                <span class="phase-badge">@(label.Badge ?? label.ShortName)</span>
             </span>
         </span>
         <span class="supremacy" data-testid="supremacy" data-value="@state.Supremacy"
