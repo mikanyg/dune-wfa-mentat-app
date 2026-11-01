@@ -23,7 +23,7 @@
                     <span class="seg @(i <= state.Supremacy ? "on" : "")"></span>
                 }
             </span>
-            <span class="supremacy-value">@state.Supremacy</span>
+            <span class="supremacy-value">@state.Supremacy<span class="supremacy-max">/@Session.Content.Supremacy.Max</span></span>
         </span>
     </div>
 }
