@@ -57,6 +57,49 @@
     color: var(--rule);
 }
 
+/* Narrower screens show only the phase name after the round; wide screens add the number and owner. */
+.phase-label {
+    display: inline-block; /* wraps as a block, never around the round */
+}
+
+.phase-number,
+.phase-owner {
+    display: none;
+}
+
+.phase-owner {
+    font-size: 0.85em;
+}
+
+.phase-label[data-owner="Harkonnen"] .phase-owner {
+    color: var(--harkonnen);
+}
+
+.phase-label[data-owner="Atreides"] .phase-owner {
+    color: var(--atreides);
+}
+
+/* Wide screens: the full phase label sits in the centre of the header; the round stays on the right.
+   Below 1500px the longest label would run into the round and Supremacy. */
+@media (min-width: 1500px) {
+    .phase-label {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        white-space: nowrap;
+    }
+
+    .phase-number,
+    .phase-owner {
+        display: inline;
+    }
+
+    .status-sep {
+        display: none;
+    }
+}
+
 .supremacy {
     display: flex;
     align-items: center;
