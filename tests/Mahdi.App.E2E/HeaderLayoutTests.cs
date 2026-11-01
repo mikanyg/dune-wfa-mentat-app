@@ -12,6 +12,7 @@ namespace Mahdi.App.E2E;
 [TestFixture("Galaxy S8")]
 [TestFixture("iPhone 15 Pro")]
 [TestFixture("iPhone 15 Pro landscape")]
+[TestFixture("iPad Pro 11 landscape")]
 [TestFixture("Desktop 1500x900")]
 [TestFixture("Desktop 1920x1080")]
 [Parallelizable(ParallelScope.Self)]
@@ -19,11 +20,17 @@ public sealed partial class HeaderLayoutTests(string device) : AppTest(device)
 {
     private static readonly string[] HeaderItems = ["home-link", "round", "phase", "supremacy", "undo", "theme-toggle"];
 
-    /// <summary>The phase name may be shortened with an ellipsis, but must stay readable.</summary>
-    private const float MinPhaseWidth = 60;
+    /// <summary>The phase label must stay readable: at least the stepper badge.</summary>
+    private const float MinPhaseWidth = 16;
 
-    /// <summary>From this width the full phase label sits in the centre of the header (game.css).</summary>
-    private const int WideScreen = 1500;
+    /// <summary>From this width the phase label sits in the centre of the header (game.css).</summary>
+    private const int CentredFrom = 1000;
+
+    /// <summary>From this width the full phase name is shown; below, the short name.</summary>
+    private const int FullNameFrom = 1500;
+
+    /// <summary>Up to this width the phase shows as its stepper badge.</summary>
+    private const int BadgeUpTo = 520;
 
     [GeneratedRegex(@"^\s*Phase 1:\s+Vehicle Placement\s+\(Harkonnen\)\s*$")]
     private static partial Regex FullVehicleLabel();
@@ -64,15 +71,24 @@ public sealed partial class HeaderLayoutTests(string device) : AppTest(device)
 
             var phase = boxes.Single(b => b.Id == "phase").Box;
             Assert.That(phase.Width, Is.GreaterThanOrEqualTo(MinPhaseWidth), "phase name is squeezed away");
-            if (viewport.Width >= WideScreen)
+            if (viewport.Width >= CentredFrom)
             {
                 Assert.That(phase.X + (phase.Width / 2), Is.EqualTo(viewport.Width / 2f).Within(2), "the phase label is centred");
             }
         }
 
-        if (viewport.Width >= WideScreen)
+        var visibleText = new LocatorAssertionsToHaveTextOptions { UseInnerText = true };
+        if (viewport.Width >= FullNameFrom)
         {
-            await Expect(ById("phase")).ToHaveTextAsync(FullVehicleLabel());
+            await Expect(ById("phase")).ToHaveTextAsync(FullVehicleLabel(), visibleText);
+        }
+        else if (viewport.Width > BadgeUpTo)
+        {
+            await Expect(ById("phase")).ToHaveTextAsync("1: Vehicles", visibleText);
+        }
+        else
+        {
+            await Expect(ById("phase")).ToHaveTextAsync("1", visibleText);
         }
     }
 

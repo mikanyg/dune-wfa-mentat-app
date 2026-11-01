@@ -270,6 +270,30 @@ public sealed partial class GameFlowTests(string device) : DeviceTest(device)
     }
 
     [Test]
+    public async Task PhaseStepperFollowsTheRound()
+    {
+        await StartGameAsync(seed: 11);
+        await Tap("confirm-phase");
+        await Tap("confirm-phase");
+        await ExpectPhaseAsync("VehiclePlacement");
+        if (IsPhone)
+        {
+            await Tap("rail-toggle");
+        }
+
+        await Expect(ById("phase-stepper")).ToBeVisibleAsync();
+        await Expect(ById("step-VehiclePlacement")).ToHaveAttributeAsync("aria-current", "step");
+        await Expect(ById("step-VehiclePlacement")).ToHaveAttributeAsync("data-owner", "Harkonnen");
+        await Expect(ById("step-RoundStart")).ToHaveClassAsync(DoneStep());
+        await Expect(ById("step-DesertHazards")).ToHaveAttributeAsync("data-owner", "Atreides");
+        await Expect(ById("step-DesertHazards")).Not.ToHaveAttributeAsync("aria-current", "step");
+        await SnapshotAsync("phase-stepper");
+    }
+
+    [GeneratedRegex(@"\bdone\b")]
+    private static partial Regex DoneStep();
+
+    [Test]
     public async Task RailMapShowsTheHarvestingSectorAndTheTargetSietch()
     {
         await StartGameAsync(seed: 11);
