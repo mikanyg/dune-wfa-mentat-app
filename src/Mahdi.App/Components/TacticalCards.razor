@@ -5,12 +5,12 @@
 <div class="tactical-cards">
     <div class="tactical-card harvest" data-testid="harvest-card">
         <span class="tactical-role">Harvesting Sector</span>
-        <SectorMap Highlight="HarvestSector" />
+        <SectorMap Harvest="HarvestSector" />
         <span class="tactical-name">@(HarvestSector is { } s ? GuidanceBuilder.SectorName(s) : "—")</span>
     </div>
     <div class="tactical-card target" data-testid="target-card">
         <span class="tactical-role">Target Sietch</span>
-        <SectorMap Highlight="TargetSector" />
+        <SectorMap Target="TargetSector" Pin="TargetCard?.Pin" />
         <span class="tactical-name">@(TargetCard?.Sietch ?? "No eligible Sietch")</span>
         @if (TargetCard is { } card)
         {

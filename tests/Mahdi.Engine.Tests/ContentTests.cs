@@ -40,6 +40,29 @@ public class ContentTests
     }
 
     [Test]
+    public void EveryTacticalCardPinLiesInItsOwnSectorOnTheMap()
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            foreach (var card in Content.TacticalCards)
+            {
+                Assert.That(card.Pin, Is.Not.Null, card.Id);
+                Assert.That(BoardMap.SectorAt(card.Pin!), Is.EqualTo(card.Sector), card.Id);
+            }
+        }
+    }
+
+    [TestCase(30, 20, Sector.NorthWest)]
+    [TestCase(90, 20, Sector.NorthEast)]
+    [TestCase(30, 70, Sector.SouthWest)]
+    [TestCase(90, 70, Sector.SouthEast)]
+    [TestCase(60, 45, Sector.Central)]
+    [TestCase(60, 19, Sector.Central)]
+    [TestCase(60, 18, Sector.NorthEast)]
+    public void BoardMapFindsTheSectorOfAPoint(int x, int y, Sector expected) =>
+        Assert.That(BoardMap.SectorAt(new MapPoint(x, y)), Is.EqualTo(expected));
+
+    [Test]
     public void EveryLeaderFaceIsUniqueAmongLeadersInPlayAtTheSameTime()
     {
         // Feyd replaces Rabban and Mohiam replaces Hawat, so one die result never has two candidates.

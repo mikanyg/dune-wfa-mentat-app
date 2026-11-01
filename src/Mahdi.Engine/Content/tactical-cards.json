@@ -1,10 +1,10 @@
 [
-  { "id": "rock-outcroppings", "sietch": "Rock Outcroppings", "sector": "NorthWest" },
-  { "id": "bight-of-the-cliff", "sietch": "Bight-of-the-Cliff", "sector": "NorthWest" },
-  { "id": "sihaya-ridge", "sietch": "Sihaya Ridge", "sector": "NorthEast" },
-  { "id": "gara-kulon", "sietch": "Gara Kulon", "sector": "NorthEast" },
-  { "id": "tasmin-sink", "sietch": "Tasmin Sink", "sector": "SouthEast" },
-  { "id": "habbanya-ridge", "sietch": "Habbanya Ridge", "sector": "SouthWest" },
-  { "id": "windgap", "sietch": "Windgap", "sector": "Central" },
-  { "id": "hobars-gap", "sietch": "Hobars Gap", "sector": "Central" }
+  { "id": "rock-outcroppings", "sietch": "Rock Outcroppings", "sector": "NorthWest", "pin": { "x": 43, "y": 9 } },
+  { "id": "bight-of-the-cliff", "sietch": "Bight-of-the-Cliff", "sector": "NorthWest", "pin": { "x": 29, "y": 33 } },
+  { "id": "sihaya-ridge", "sietch": "Sihaya Ridge", "sector": "NorthEast", "pin": { "x": 90, "y": 12 } },
+  { "id": "gara-kulon", "sietch": "Gara Kulon", "sector": "NorthEast", "pin": { "x": 91, "y": 35 } },
+  { "id": "tasmin-sink", "sietch": "Tasmin Sink", "sector": "SouthEast", "pin": { "x": 93, "y": 56 } },
+  { "id": "habbanya-ridge", "sietch": "Habbanya Ridge", "sector": "SouthWest", "pin": { "x": 29, "y": 59 } },
+  { "id": "windgap", "sietch": "Windgap", "sector": "Central", "pin": { "x": 46, "y": 60 } },
+  { "id": "hobars-gap", "sietch": "Hobars Gap", "sector": "Central", "pin": { "x": 67, "y": 61 } }
 ]
