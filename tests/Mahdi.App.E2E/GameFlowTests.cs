@@ -152,11 +152,7 @@ public sealed partial class GameFlowTests(string device) : DeviceTest(device)
         await Expect(ById("card-picker")).ToHaveCountAsync(0);
         await Expect(Page.GetByText("New Target Sietch: Tasmin Sink")).ToBeVisibleAsync();
         await Expect(ById("face-picker")).ToBeVisibleAsync();
-        if (IsPhone)
-        {
-            await Tap("rail-toggle");
-        }
-
+        await OpenTargetsAsync();
         await Expect(ById("target-sietch")).ToHaveTextAsync("Tasmin Sink");
     }
 
@@ -165,7 +161,9 @@ public sealed partial class GameFlowTests(string device) : DeviceTest(device)
     {
         await StartGameAsync(seed: 14);
         await AdvanceToActionsAsync();
+        await OpenTargetsAsync();
         var target = await ById("target-sietch").TextContentAsync();
+        await CloseTargetsAsync();
 
         await Tap("open-sietch");
         await Expect(ById("event-sheet")).ToBeVisibleAsync();
@@ -175,8 +173,48 @@ public sealed partial class GameFlowTests(string device) : DeviceTest(device)
 
         await Expect(ById("event-sheet")).ToHaveCountAsync(0);
         await Expect(ById("supremacy")).ToHaveAttributeAsync("data-value", "2");
-        await Expect(ById("target-sietch")).Not.ToHaveTextAsync(target!);
         await Expect(Page.GetByText("New Target Sietch")).ToBeVisibleAsync();
+        await OpenTargetsAsync();
+        await Expect(ById("target-sietch")).Not.ToHaveTextAsync(target!);
+    }
+
+    [Test]
+    public async Task HarkonnenTargetsOpensBothTacticalCards()
+    {
+        await StartGameAsync(seed: 11);
+        await AdvanceToActionsAsync();
+        await OpenTargetsAsync();
+
+        await Expect(ById("tc-harvest")).ToContainTextAsync("Harvesting Sector");
+        await Expect(ById("harvest-sector")).ToHaveTextAsync("North-West Sector");
+        await Expect(ById("tc-target")).ToContainTextAsync("Target Sietch");
+        await Expect(ById("target-sietch")).ToHaveTextAsync("Sihaya Ridge");
+        await SnapshotAsync("harkonnen-targets");
+
+        await Tap("tc-close");
+        await Expect(ById("tc-sheet")).ToHaveCountAsync(0);
+    }
+
+    /// <summary>Opens the Harkonnen Targets sheet from the rail (sliding the rail out on the phone first).</summary>
+    private async Task OpenTargetsAsync()
+    {
+        if (IsPhone && await ById("open-targets").IsHiddenAsync())
+        {
+            await Tap("rail-toggle");
+        }
+
+        await Tap("open-targets");
+        await Expect(ById("tc-sheet")).ToBeVisibleAsync();
+    }
+
+    /// <summary>Closes the Harkonnen Targets sheet and, on the phone, slides the rail back in.</summary>
+    private async Task CloseTargetsAsync()
+    {
+        await Tap("tc-close");
+        if (IsPhone && await ById("open-targets").IsVisibleAsync())
+        {
+            await Tap("rail-toggle");
+        }
     }
 
     [Test]
@@ -257,15 +295,15 @@ public sealed partial class GameFlowTests(string device) : DeviceTest(device)
 
         if (IsPhone)
         {
-            await Expect(ById("target-sietch")).ToBeHiddenAsync();
+            await Expect(ById("rail-map")).ToBeHiddenAsync();
             await Tap("rail-toggle");
-            await Expect(ById("target-sietch")).ToBeVisibleAsync();
+            await Expect(ById("rail-map")).ToBeVisibleAsync();
             await SnapshotAsync("rail-open");
         }
         else
         {
             await Expect(ById("rail-toggle")).ToBeHiddenAsync();
-            await Expect(ById("target-sietch")).ToBeVisibleAsync();
+            await Expect(ById("rail-map")).ToBeVisibleAsync();
         }
     }
 
