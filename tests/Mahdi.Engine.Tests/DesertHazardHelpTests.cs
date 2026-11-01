@@ -6,6 +6,8 @@ namespace Mahdi.Engine.Tests;
 
 public class DesertHazardHelpTests
 {
+    private static readonly string[] ExposedTerrain = ["Plateau", "Minor Erg", "Desert", "Deep Desert"];
+
     private static DesertHazardHelp Help => DesertHazardHelp.Rules;
 
     [TestCase(HazardAttack.CoriolisStorm, 2)]
@@ -61,7 +63,7 @@ public class DesertHazardHelpTests
     {
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(Help.ExposedAreas, Is.EquivalentTo(new[] { "Plateau", "Minor Erg", "Desert", "Deep Desert" }));
+            Assert.That(Help.ExposedAreas, Is.EquivalentTo(ExposedTerrain));
             Assert.That(Help.NotExposed, Has.Some.Contains("Mountains"));
             Assert.That(Help.NotExposed, Has.Some.Contains("5 central Plateau"));
             Assert.That(Help.RuleReference, Does.Contain("20").And.Contain("31"));

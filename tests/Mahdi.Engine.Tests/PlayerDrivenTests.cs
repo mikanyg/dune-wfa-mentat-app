@@ -9,6 +9,8 @@ namespace Mahdi.Engine.Tests;
 /// <summary>Player-driven mode: the player draws the Tactical cards and enters them.</summary>
 public class PlayerDrivenTests
 {
+    private static readonly string[] BightDiscarded = ["bight-of-the-cliff"];
+
     private static GameContent Content => TestGame.Content;
 
     private static Game AtRoundStart()
@@ -66,7 +68,7 @@ public class PlayerDrivenTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(game.State.Tactical.TargetCardId, Is.Null);
-            Assert.That(game.State.Tactical.Discard, Is.EqualTo(new[] { "bight-of-the-cliff" }));
+            Assert.That(game.State.Tactical.Discard, Is.EqualTo(BightDiscarded));
             Assert.That(TacticalDeck.AwaitingTarget(Content, game.State), Is.True);
         }
 
