@@ -859,6 +859,101 @@ details[open] > summary::before {
     transform: rotate(-45deg);
 }
 
+/* ---------- Tactical card picker (player-driven) ---------- */
+
+.card-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.card-picker h2 {
+    margin: 0;
+}
+
+.picker-done {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.picker-check {
+    color: var(--atreides);
+    font-weight: 700;
+}
+
+.picker-warning {
+    padding: 8px 12px;
+    border-radius: var(--radius);
+    border: 1px solid var(--harkonnen);
+    background: color-mix(in srgb, var(--harkonnen) 10%, var(--surface));
+    color: var(--harkonnen);
+    font-weight: 600;
+}
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.card-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 8px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--rule);
+    background: linear-gradient(180deg, var(--surface-2), var(--surface));
+    box-shadow: var(--shadow);
+    color: var(--text);
+    text-align: center;
+    cursor: pointer;
+    font: inherit;
+}
+
+.card-tile .sector-map {
+    width: 100%;
+    max-width: 110px;
+}
+
+.card-tile-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.95rem;
+    line-height: 1.15;
+}
+
+.card-tile-sector {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+.card-tile-tag {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--harkonnen);
+}
+
+.card-tile.same-sector,
+.card-tile.destroyed {
+    border-style: dashed;
+}
+
+.card-tile:disabled {
+    opacity: 0.45;
+    cursor: default;
+    box-shadow: none;
+}
+
+.card-tile.harvest:disabled {
+    opacity: 0.7;
+    border-color: var(--accent);
+}
+
 /* ---------- Notices ---------- */
 
 .notices {
@@ -1877,6 +1972,12 @@ details[open] > summary::before {
     }
 }
 
+@media (max-width: 560px) {
+    .card-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 /* Short landscape screens (phones on their side): the rail becomes an icon strip with a slide-out panel. */
 @media (max-height: 520px) {
     :root {
@@ -1969,6 +2070,23 @@ details[open] > summary::before {
     .strip-map {
         display: block;
         width: 52px;
+    }
+
+    .card-grid {
+        gap: 8px;
+    }
+
+    .card-tile {
+        padding: 6px;
+        gap: 2px;
+    }
+
+    .card-tile .sector-map {
+        max-width: 72px;
+    }
+
+    .card-tile-name {
+        font-size: 0.82rem;
     }
 
     .strip-map .sector-map {

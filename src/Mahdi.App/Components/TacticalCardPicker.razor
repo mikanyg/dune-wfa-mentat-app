@@ -1,0 +1,134 @@
+@using Mahdi.Engine.Commands
+@using Mahdi.Engine.Guidance
+@using Mahdi.Engine.Model
+@using Mahdi.Engine.Rules
+@inject GameSession Session
+
+@*
+    Player-driven mode: the player draws a Tactical card and taps the matching tile. First the Harvesting Sector card,
+    then the Target Sietch card. A Target card showing the Harvesting Sector or a destroyed Sietch is discarded, and
+    the player draws again. Cards in play or discarded are greyed out.
+*@
+<section class="card-picker frame" data-testid="card-picker" data-mode="@(PickingHarvest ? "harvest" : "target")">
+    @if (PickingHarvest)
+    {
+        <h2>Draw the Harvesting Sector card</h2>
+        <p class="muted">Shuffle the 8 Tactical cards, draw the top one and tap it. Its Sector is the Harkonnen Harvesting Sector this round.</p>
+    }
+    else
+    {
+        @if (HarvestCard is { } harvest)
+        {
+            <p class="picker-done" data-testid="picker-harvest">
+                <span class="picker-check">✓</span> Harvesting: <strong>@GuidanceBuilder.SectorName(harvest.Sector)</strong> (@harvest.Sietch)
+                @if (State.Phase == Phase.RoundStart)
+                {
+                    <button type="button" class="btn btn-small" data-testid="change-harvest" @onclick="() => changingHarvest = true">Change</button>
+                }
+            </p>
+        }
+        <h2>@(State.Phase == Phase.RoundStart ? "Draw the Target Sietch card" : "Target Sietch destroyed: draw a new Target card")</h2>
+        <p class="muted">Draw the next card and tap it. A card showing the Harvesting Sector or a destroyed Sietch is discarded: draw again.</p>
+    }
+
+    @if (warning is not null)
+    {
+        <p class="picker-warning" data-testid="picker-warning" role="status">⚠ @warning</p>
+    }
+
+    <div class="card-grid">
+        @foreach (var card in Session.Content.TacticalCards)
+        {
+            var status = Status(card);
+            <button type="button" class="card-tile @status" data-testid="pick-@card.Id" data-state="@status"
+                    disabled="@(status is "harvest" or "target" or "discarded")" @onclick="() => Pick(card)">
+                <SectorMap Harvest="@(PickingHarvest || status == "harvest" ? card.Sector : null)"
+                           Target="@(PickingHarvest || status == "harvest" ? null : card.Sector)" Pin="card.Pin" />
+                <span class="card-tile-name">@card.Sietch</span>
+                <span class="card-tile-sector">@(card.Sector == Sector.Central ? "Central Sectors" : GuidanceBuilder.SectorName(card.Sector))</span>
+                @if (Tag(status) is { } tag)
+                {
+                    <span class="card-tile-tag">@tag</span>
+                }
+            </button>
+        }
+    </div>
+</section>
+
+@code {
+    private bool changingHarvest;
+    private string? warning;
+
+    [Parameter, EditorRequired]
+    public GameState State { get; set; } = default!;
+
+    private bool PickingHarvest => changingHarvest || TacticalDeck.AwaitingHarvest(State);
+
+    private TacticalCard? HarvestCard => State.Tactical.HarvestCardId is { } id ? Session.Content.Card(id) : null;
+
+    private string Status(TacticalCard card)
+    {
+        var tactical = State.Tactical;
+        var destroyed = tactical.DestroyedSietches.Contains(card.Id);
+        if (PickingHarvest)
+        {
+            return destroyed ? "destroyed" : "available";
+        }
+
+        if (card.Id == tactical.HarvestCardId)
+        {
+            return "harvest";
+        }
+
+        if (card.Id == tactical.TargetCardId)
+        {
+            return "target";
+        }
+
+        if (tactical.Discard.Contains(card.Id))
+        {
+            return "discarded";
+        }
+
+        if (destroyed)
+        {
+            return "destroyed";
+        }
+
+        return HarvestCard is { } harvest && card.Sector == harvest.Sector ? "same-sector" : "available";
+    }
+
+    private string? Tag(string status) => status switch
+    {
+        "harvest" => "Harvesting card",
+        "discarded" => "Discarded",
+        "destroyed" => "Sietch destroyed",
+        "same-sector" => "Same Sector",
+        _ => null,
+    };
+
+    private void Pick(TacticalCard card)
+    {
+        if (PickingHarvest)
+        {
+            warning = null;
+            if (Session.Execute(new EnterHarvestCard(card.Id)))
+            {
+                changingHarvest = false;
+            }
+
+            return;
+        }
+
+        var status = Status(card);
+        if (Session.Execute(new EnterTargetCard(card.Id)))
+        {
+            warning = status switch
+            {
+                "same-sector" => $"{card.Sietch} shows the Harvesting Sector: discard it and draw again.",
+                "destroyed" => $"{card.Sietch} has been destroyed: discard it and draw again.",
+                _ => null,
+            };
+        }
+    }
+}

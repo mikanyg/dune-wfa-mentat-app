@@ -10,19 +10,19 @@
 <div class="page-centered">
     <section class="hero new-game">
         <h1>New game</h1>
-        <p class="quote">Who casts the Harkonnen dice?</p>
-        <div class="mode-tiles" role="radiogroup" aria-label="Dice mode">
+        <p class="quote">Who drives the Harkonnens?</p>
+        <div class="mode-tiles" role="radiogroup" aria-label="Play mode">
             <button type="button" role="radio" aria-checked="@AriaBool(mode == DiceMode.AppRolls)" data-testid="mode-app"
                     class="mode-tile @(mode == DiceMode.AppRolls ? "selected" : "")" @onclick="() => mode = DiceMode.AppRolls">
                 <span class="mode-icon"><DieIcon Face="DieFace.Strategy" /></span>
-                <span class="mode-title">The app rolls</span>
-                <span class="mode-desc">One tap per Harkonnen turn. Rerolls are handled for you.</span>
+                <span class="mode-title">App-driven</span>
+                <span class="mode-desc">The app rolls the Harkonnen dice and draws the Tactical cards. One tap per Harkonnen turn.</span>
             </button>
             <button type="button" role="radio" aria-checked="@AriaBool(mode == DiceMode.Physical)" data-testid="mode-physical"
                     class="mode-tile @(mode == DiceMode.Physical ? "selected" : "")" @onclick="() => mode = DiceMode.Physical">
                 <span class="mode-icon"><DieIcon Face="DieFace.House" /></span>
-                <span class="mode-title">I roll the dice</span>
-                <span class="mode-desc">Roll a physical Harkonnen die and tap the result.</span>
+                <span class="mode-title">Player-driven</span>
+                <span class="mode-desc">You roll the Harkonnen dice and draw the Tactical cards, then tap what you got.</span>
             </button>
         </div>
         @if (Session.State is { Phase: not Phase.GameOver })

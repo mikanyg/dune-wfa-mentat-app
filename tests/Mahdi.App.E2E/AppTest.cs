@@ -52,6 +52,7 @@ public abstract class AppTest(string device) : PageTest
     protected Task Tap(string testId) => ById(testId).First.ClickAsync();
 
     /// <summary>Starts a new game with a fixed seed and lands on the setup screen.</summary>
+    /// <param name="physicalDice">Player-driven mode: the player rolls the dice and draws the Tactical cards.</param>
     protected async Task StartGameAsync(int seed, bool physicalDice = false)
     {
         await OpenAsync($"new?seed={seed}");
@@ -69,10 +70,25 @@ public abstract class AppTest(string device) : PageTest
     {
         await Tap("confirm-phase");
         await ExpectPhaseAsync("RoundStart");
+        if (await ById("card-picker").CountAsync() > 0)
+        {
+            await EnterTacticalCardsAsync();
+        }
+
         await Tap("confirm-phase");
         await ExpectPhaseAsync("VehiclePlacement");
         await Tap("confirm-phase");
         await ExpectPhaseAsync("ActionResolution");
+    }
+
+    /// <summary>Player-driven: taps the Harvesting card, then the Target card the player drew.</summary>
+    protected async Task EnterTacticalCardsAsync(string harvest = "rock-outcroppings", string target = "sihaya-ridge")
+    {
+        await Expect(ById("card-picker")).ToHaveAttributeAsync("data-mode", "harvest");
+        await Tap($"pick-{harvest}");
+        await Expect(ById("card-picker")).ToHaveAttributeAsync("data-mode", "target");
+        await Tap($"pick-{target}");
+        await Expect(ById("card-picker")).ToHaveCountAsync(0);
     }
 
     protected Task ExpectPhaseAsync(string phase) =>

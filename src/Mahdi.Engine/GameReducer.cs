@@ -47,6 +47,15 @@ public static class GameReducer
         RoundEnded => EndRound(content, state),
         SietchDestroyed x => DestroySietch(content, state, x),
         TargetSietchDrawn x => DrawTarget(content, state, x),
+        HarvestCardEntered x => state with
+        {
+            Tactical = state.Tactical with { HarvestCardId = x.CardId, TargetCardId = null, Discard = [] },
+        },
+        TargetCardEntered x => EnterTarget(content, state, x),
+        TacticalCardDiscarded x => state with { Tactical = state.Tactical with { Discard = state.Tactical.Discard.Add(x.CardId) } },
+        TargetSietchDiscarded => state.Tactical.TargetCardId is { } old
+            ? state with { Tactical = state.Tactical with { Discard = state.Tactical.Discard.Add(old), TargetCardId = null } }
+            : state,
         ReinforcementAdded => state with
         {
             Reinforcements = state.Reinforcements + 1,
@@ -249,6 +258,14 @@ public static class GameReducer
         };
 
         return AdvanceSupremacy(content, next, x.Rank);
+    }
+
+    private static GameState EnterTarget(GameContent content, GameState state, TargetCardEntered x)
+    {
+        var next = state with { Tactical = state.Tactical with { TargetCardId = x.CardId } };
+        return state.Phase == Phase.RoundStart
+            ? next
+            : Notify(next, NoticeKind.Important, $"New Target Sietch: {content.Card(x.CardId).Sietch}.");
     }
 
     private static GameState DrawTarget(GameContent content, GameState state, TargetSietchDrawn x)

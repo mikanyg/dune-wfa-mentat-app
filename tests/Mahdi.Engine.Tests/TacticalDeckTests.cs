@@ -20,8 +20,8 @@ public class TacticalDeckTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(round.TargetCardId, Is.Not.Null);
-            Assert.That(Content.Card(round.TargetCardId!).Sector, Is.Not.EqualTo(Content.Card(round.HarvestCardId).Sector));
-            Assert.That(round.Rejected.Select(id => Content.Card(id).Sector), Is.All.EqualTo(Content.Card(round.HarvestCardId).Sector));
+            Assert.That(Content.Card(round.TargetCardId!).Sector, Is.Not.EqualTo(Content.Card(round.HarvestCardId!).Sector));
+            Assert.That(round.Rejected.Select(id => Content.Card(id).Sector), Is.All.EqualTo(Content.Card(round.HarvestCardId!).Sector));
         }
     }
 

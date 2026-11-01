@@ -6,6 +6,8 @@ namespace Mahdi.Engine.Tests;
 
 public class GuidanceTests
 {
+    private static readonly string[] HazardSectionKeys = ["Wormsigns", "Sandworms", "CoriolisStorms"];
+
     private static GuidanceBuilder Builder => new(TestGame.Content);
 
     [Test]
@@ -104,6 +106,7 @@ public class GuidanceTests
         game.Execute(new ConfirmDesertHazards());
         game.Execute(new HarvestSpice(0, 0));
         game.Execute(new EndRound());
+        TestGame.EnterCardsIfNeeded(game);
         game.Execute(new ConfirmRoundStart());
         game.Execute(new ConfirmVehicles());
 
@@ -131,7 +134,7 @@ public class GuidanceTests
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(guidance.Sections.Select(s => s.Key), Is.EqualTo(new[] { "Wormsigns", "Sandworms", "CoriolisStorms" }));
+            Assert.That(guidance.Sections.Select(s => s.Key), Is.EqualTo(HazardSectionKeys));
             Assert.That(guidance.Sections[0].Details, Has.Some.Contains("Burrowing Sandworm"));
             Assert.That(guidance.Sections[1].Lines, Has.Some.Contains("4 Combat dice"));
             Assert.That(guidance.Sections[1].Help, Is.EqualTo(HazardAttack.Sandworm));

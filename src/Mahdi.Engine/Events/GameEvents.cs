@@ -23,6 +23,10 @@ namespace Mahdi.Engine.Events;
 [JsonDerivedType(typeof(RoundEnded), "roundEnded")]
 [JsonDerivedType(typeof(SietchDestroyed), "sietchDestroyed")]
 [JsonDerivedType(typeof(TargetSietchDrawn), "targetDrawn")]
+[JsonDerivedType(typeof(HarvestCardEntered), "harvestCardEntered")]
+[JsonDerivedType(typeof(TargetCardEntered), "targetCardEntered")]
+[JsonDerivedType(typeof(TacticalCardDiscarded), "tacticalCardDiscarded")]
+[JsonDerivedType(typeof(TargetSietchDiscarded), "targetSietchDiscarded")]
 [JsonDerivedType(typeof(ReinforcementAdded), "reinforcementAdded")]
 [JsonDerivedType(typeof(ReinforcementsDrawn), "reinforcementsDrawn")]
 [JsonDerivedType(typeof(ReinforcementsDiscarded), "reinforcementsDiscarded")]
@@ -44,8 +48,9 @@ public sealed record SetupCompleted : GameEvent;
 
 public sealed record DiceModeChanged(DiceMode Mode) : GameEvent;
 
+/// <param name="HarvestCardId">Null in player-driven mode: the player enters the cards they draw.</param>
 /// <param name="Rejected">Cards drawn for the Target Sietch and discarded (same Sector or destroyed Sietch).</param>
-public sealed record RoundStarted(int Round, string HarvestCardId, string? TargetCardId, ImmutableArray<string> Rejected) : GameEvent;
+public sealed record RoundStarted(int Round, string? HarvestCardId, string? TargetCardId, ImmutableArray<string> Rejected) : GameEvent;
 
 public sealed record RoundStartConfirmed : GameEvent;
 
@@ -82,6 +87,18 @@ public sealed record SietchDestroyed(string CardId, int Rank) : GameEvent;
 /// <summary>A new Target Sietch was drawn mid-round (the previous one was destroyed).</summary>
 /// <param name="Reshuffled">No eligible card was left, so the discarded cards were shuffled back first.</param>
 public sealed record TargetSietchDrawn(string? TargetCardId, ImmutableArray<string> Rejected, bool Reshuffled) : GameEvent;
+
+/// <summary>Player-driven: the Harvesting Sector card the player drew (any Target and discards are cleared).</summary>
+public sealed record HarvestCardEntered(string CardId) : GameEvent;
+
+/// <summary>Player-driven: the player drew an eligible Target Sietch card.</summary>
+public sealed record TargetCardEntered(string CardId) : GameEvent;
+
+/// <summary>Player-driven: a card drawn for the Target showed the Harvesting Sector or a destroyed Sietch, so it was discarded.</summary>
+public sealed record TacticalCardDiscarded(string CardId) : GameEvent;
+
+/// <summary>Player-driven: the Target Sietch was destroyed; its card is discarded and the player draws a new one.</summary>
+public sealed record TargetSietchDiscarded : GameEvent;
 
 /// <summary>
 /// Legacy (saves from before deck alternation followed the discard pile): one card added to the

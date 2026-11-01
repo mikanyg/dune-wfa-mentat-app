@@ -11,6 +11,15 @@ public sealed record ChangeDiceMode(DiceMode Mode) : GameCommand;
 
 public sealed record ConfirmRoundStart : GameCommand;
 
+/// <summary>Player-driven: the Harvesting Sector card the player drew. Entering it again starts the round's draw over.</summary>
+public sealed record EnterHarvestCard(string CardId) : GameCommand;
+
+/// <summary>
+/// Player-driven: the card the player drew for the Target Sietch. A card showing the Harvesting Sector or a destroyed
+/// Sietch is discarded, and the player draws again.
+/// </summary>
+public sealed record EnterTargetCard(string CardId) : GameCommand;
+
 public sealed record ConfirmVehicles : GameCommand;
 
 /// <summary>App-rolls mode: roll an unused Harkonnen die (rerolling blocked results).</summary>

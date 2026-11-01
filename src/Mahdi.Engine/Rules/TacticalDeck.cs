@@ -20,6 +20,25 @@ public static class TacticalDeck
     public static bool IsEligibleTarget(GameContent content, TacticalState tactical, string cardId, Sector harvestSector) =>
         content.Card(cardId).Sector != harvestSector && !tactical.DestroyedSietches.Contains(cardId);
 
+    /// <summary>
+    /// Starts a round: app-driven, the app draws both cards; player-driven, the round starts without cards and the
+    /// player enters the ones they draw.
+    /// </summary>
+    public static RoundStarted StartRound(GameContent content, GameState state, IRandomSource random, int round) =>
+        state.DiceMode == DiceMode.Physical ? new RoundStarted(round, null, null, []) : DrawRound(content, state, random, round);
+
+    /// <summary>Player-driven: the round has started and the Harvesting Sector card is still to be entered.</summary>
+    public static bool AwaitingHarvest(GameState state) =>
+        state.Phase == Phase.RoundStart && state.Tactical.HarvestCardId is null;
+
+    /// <summary>
+    /// Player-driven: there is no Target Sietch, but the deck still holds an eligible card, so the player draws one.
+    /// (App-driven, the Target is only ever missing when no eligible card is left.)
+    /// </summary>
+    public static bool AwaitingTarget(GameContent content, GameState state) =>
+        state.Tactical is { HarvestCardId: { } harvest, TargetCardId: null } tactical
+        && Remaining(content, tactical).Any(id => IsEligibleTarget(content, tactical, id, content.Card(harvest).Sector));
+
     /// <summary>Draws the Harvesting Sector and Target Sietch cards from a freshly shuffled deck.</summary>
     public static RoundStarted DrawRound(GameContent content, GameState state, IRandomSource random, int round)
     {
