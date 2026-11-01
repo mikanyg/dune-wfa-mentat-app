@@ -42,7 +42,8 @@ public sealed record SpiceMustFlowRow(int Step, int DiceSetAside, int Harvesters
 /// <param name="AtreidesBeneGesseritSteps">Steps that give the Atreides a Bene Gesserit token.</param>
 public sealed record SupremacyTrack(int Max, ImmutableArray<int> AtreidesBeneGesseritSteps);
 
-public sealed record TacticalCard(string Id, string Sietch, Sector Sector);
+/// <param name="Pin">Where the card's map puts the Sietch, on the app's schematic <see cref="BoardMap"/>.</param>
+public sealed record TacticalCard(string Id, string Sietch, Sector Sector, MapPoint? Pin = null);
 
 /// <param name="Face">The die result whose Action box holds the Leader card.</param>
 /// <param name="EntryStep">Supremacy step that brings the Leader into play (for <see cref="LeaderEntry.SupremacyStep"/>).</param>

@@ -1,21 +1,90 @@
+@using Mahdi.Engine.Guidance
 @using Mahdi.Engine.Model
 
-@* A tiny map of the 8 Sectors: four quadrants around the North Pole, each with a Central and an Outer part. *@
-<svg class="sector-map" viewBox="0 0 120 90" aria-hidden="true">
-    <rect x="1" y="1" width="118" height="88" rx="6" class="sm-board" />
-    <path d="M1 1H60V45H1Z" class="@Outer(Sector.NorthWest)" />
-    <path d="M60 1H119V45H60Z" class="@Outer(Sector.NorthEast)" />
-    <path d="M1 45H60V89H1Z" class="@Outer(Sector.SouthWest)" />
-    <path d="M60 45H119V89H60Z" class="@Outer(Sector.SouthEast)" />
-    <circle cx="60" cy="45" r="27" class="@(Highlight == Sector.Central ? "sm-on" : "sm-central")" />
-    <path d="M60 1V89M1 45H119" class="sm-line" />
-    <circle cx="60" cy="45" r="27" class="sm-ring" />
-    <circle cx="60" cy="45" r="4" class="sm-pole" />
+@*
+    Schematic board map, oriented like the Tactical cards: North at the top, the Atreides side at the bottom.
+    Four Outer Sectors around the North Pole, and the central circle for the Central Sectors (one Sector in solo).
+    The Harvesting Sector is filled with spice, the Target Sector hatched red, and a pin marks the Target Sietch.
+    The two can never be the same Sector (the Target card is redrawn), so the fills never overlap.
+*@
+<svg class="sector-map @(Labels ? "labelled" : "")" viewBox="@ViewBox" role="img" aria-label="@AriaLabel"
+     data-testid="@TestId" data-harvest="@Harvest" data-target="@Target" data-pin="@(Pin is { } p ? $"{p.X},{p.Y}" : null)">
+    <defs>
+        <pattern id="@hatchId" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)">
+            <rect width="5" height="5" class="sm-hatch-bg" />
+            <line x1="1.5" y1="0" x2="1.5" y2="5" class="sm-hatch-line" />
+        </pattern>
+        <clipPath id="@clipId">
+            <rect x="1" y="1" width="@(BoardMap.Width - 2)" height="@(BoardMap.Height - 2)" rx="6" />
+        </clipPath>
+    </defs>
+    <rect x="1" y="1" width="@(BoardMap.Width - 2)" height="@(BoardMap.Height - 2)" rx="6" class="sm-board" />
+    <g clip-path="@($"url(#{clipId})")">
+        <path d="M1 1H60V45H1Z" class="@Fill(Sector.NorthWest)" style="@HatchFill(Sector.NorthWest)" />
+        <path d="M60 1H119V45H60Z" class="@Fill(Sector.NorthEast)" style="@HatchFill(Sector.NorthEast)" />
+        <path d="M1 45H60V89H1Z" class="@Fill(Sector.SouthWest)" style="@HatchFill(Sector.SouthWest)" />
+        <path d="M60 45H119V89H60Z" class="@Fill(Sector.SouthEast)" style="@HatchFill(Sector.SouthEast)" />
+        <path d="M60 1V89M1 45H119" class="sm-line" />
+    </g>
+    <rect x="1" y="1" width="@(BoardMap.Width - 2)" height="@(BoardMap.Height - 2)" rx="6" class="sm-board-edge" />
+    <circle cx="@BoardMap.CentreX" cy="@BoardMap.CentreY" r="@BoardMap.CentralRadius"
+            class="@CentralFill" style="@HatchFill(Sector.Central)" />
+    <circle cx="@BoardMap.CentreX" cy="@BoardMap.CentreY" r="@BoardMap.CentralRadius" class="sm-ring" />
+    <circle cx="@BoardMap.CentreX" cy="@BoardMap.CentreY" r="3.5" class="sm-pole" />
+    @if (Pin is { } pin)
+    {
+        <g class="sm-pin" transform="@($"translate({pin.X} {pin.Y})")">
+            <path d="M0 0L-4.2 -7.5A4.8 4.8 0 1 1 4.2 -7.5Z" />
+            <circle cx="0" cy="-10" r="1.8" class="sm-pin-dot" />
+        </g>
+    }
+    @if (Labels)
+    {
+        <g class="sm-labels">
+            <text x="@BoardMap.CentreX" y="-3" class="sm-label">N</text>
+            <text x="@BoardMap.CentreX" y="@(BoardMap.Height + 8)" class="sm-label">Atreides</text>
+        </g>
+    }
 </svg>
 
 @code {
-    [Parameter]
-    public Sector? Highlight { get; set; }
+    private readonly string hatchId = $"sm-hatch-{Guid.NewGuid():N}";
+    private readonly string clipId = $"sm-clip-{Guid.NewGuid():N}";
 
-    private string Outer(Sector sector) => Highlight == sector ? "sm-on" : "sm-outer";
+    /// <summary>The Harvesting Sector, filled with spice.</summary>
+    [Parameter]
+    public Sector? Harvest { get; set; }
+
+    /// <summary>The Target Sietch's Sector, hatched red.</summary>
+    [Parameter]
+    public Sector? Target { get; set; }
+
+    /// <summary>The Target Sietch.</summary>
+    [Parameter]
+    public MapPoint? Pin { get; set; }
+
+    /// <summary>Shows "N" above and "Atreides" below the map.</summary>
+    [Parameter]
+    public bool Labels { get; set; }
+
+    [Parameter]
+    public string? TestId { get; set; }
+
+    private string ViewBox => Labels ? $"0 -10 {BoardMap.Width} {BoardMap.Height + 20}" : $"0 0 {BoardMap.Width} {BoardMap.Height}";
+
+    private string Fill(Sector sector) =>
+        sector == Harvest ? "sm-harvest" : sector == Target ? "sm-target" : "sm-outer";
+
+    private string CentralFill => Fill(Sector.Central) is "sm-outer" ? "sm-central" : Fill(Sector.Central);
+
+    /// <summary>The hatch pattern is per map (pattern ids are document-wide), so it is set inline.</summary>
+    private string? HatchFill(Sector sector) => sector == Target && sector != Harvest ? $"fill: url(#{hatchId})" : null;
+
+    private string AriaLabel => (Harvest, Target) switch
+    {
+        ({ } h, { } t) => $"Map: Harvesting {GuidanceBuilder.SectorName(h)}, Target Sietch in {GuidanceBuilder.SectorName(t)}",
+        ({ } h, null) => $"Map: Harvesting {GuidanceBuilder.SectorName(h)}",
+        (null, { } t) => $"Map: Target Sietch in {GuidanceBuilder.SectorName(t)}",
+        _ => "Map of the Sectors",
+    };
 }

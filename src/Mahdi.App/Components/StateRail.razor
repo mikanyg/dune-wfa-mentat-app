@@ -11,6 +11,12 @@
         <span class="strip-item" title="Unused Harkonnen dice"><span class="strip-dot"></span>@State.Dice.Unused</span>
         <span class="strip-item" title="Reinforcements"><span class="strip-card"></span>@State.Reinforcements</span>
         <span class="strip-item" title="Supremacy"><span class="strip-diamond">◆</span>@State.Supremacy</span>
+        @if (HasCards)
+        {
+            <span class="strip-map" title="Harvesting Sector and Target Sietch">
+                <SectorMap Harvest="HarvestSector" Target="TargetCard?.Sector" Pin="TargetCard?.Pin" TestId="strip-map" />
+            </span>
+        }
         <span class="strip-chevron" aria-hidden="true">@(open ? "‹" : "›")</span>
     </button>
 
@@ -44,11 +50,28 @@
             }
         </section>
 
-        <section class="rail-section">
-            <h3>Target Sietch</h3>
-            <p class="rail-value" data-testid="target-sietch">@TargetName</p>
-            <h3>Harvesting Sector</h3>
-            <p class="rail-value small" data-testid="harvest-sector">@Session.Guidance.HarvestSectorName(State)</p>
+        <section class="rail-section rail-tactical">
+            <div class="rail-tactical-text">
+                <h3>Target Sietch</h3>
+                <p class="rail-value" data-testid="target-sietch">@TargetName</p>
+                @if (TargetCard is { } target)
+                {
+                    <p class="rail-sub" data-testid="target-sector">@GuidanceBuilder.SectorName(target.Sector)</p>
+                }
+                <h3>Harvesting Sector</h3>
+                <p class="rail-value small" data-testid="harvest-sector">@Session.Guidance.HarvestSectorName(State)</p>
+            </div>
+            @if (HasCards)
+            {
+                <figure class="rail-map">
+                    <SectorMap Harvest="HarvestSector" Target="TargetCard?.Sector" Pin="TargetCard?.Pin" Labels="true" TestId="rail-map" />
+                    <figcaption class="map-legend">
+                        <span><span class="swatch swatch-harvest"></span>Harvest</span>
+                        <span><span class="swatch swatch-target"></span>Target</span>
+                        <span><span class="swatch swatch-pin"></span>Sietch</span>
+                    </figcaption>
+                </figure>
+            }
         </section>
 
         <section class="rail-section">
@@ -151,9 +174,13 @@
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
 
-    private string TargetName => State.Tactical.TargetCardId is { } id
-        ? Session.Content.Card(id).Sietch
-        : "—";
+    private TacticalCard? TargetCard => State.Tactical.TargetCardId is { } id ? Session.Content.Card(id) : null;
+
+    private Sector? HarvestSector => State.Tactical.HarvestCardId is { } id ? Session.Content.Card(id).Sector : null;
+
+    private bool HasCards => HarvestSector is not null;
+
+    private string TargetName => TargetCard?.Sietch ?? "—";
 
     private void SwitchDeck() => Session.Execute(new SetNextDeck(GameReducer.Other(State.NextDeck)));
 
