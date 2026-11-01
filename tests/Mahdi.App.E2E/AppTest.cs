@@ -11,14 +11,25 @@ public abstract class AppTest(string device) : PageTest
 
     protected bool IsPhone => Device.Contains("iPhone", StringComparison.Ordinal);
 
+    /// <summary>
+    /// A Playwright device profile, or "Desktop WIDTHxHEIGHT" for a desktop browser window of that size.
+    /// </summary>
     public override BrowserNewContextOptions ContextOptions()
     {
-        var options = new BrowserNewContextOptions(Playwright.Devices[Device])
-        {
-            BaseURL = AppServer.BaseUrl,
-            ColorScheme = ColorScheme.Light,
-        };
+        var options = Device.StartsWith(DesktopPrefix, StringComparison.Ordinal)
+            ? new BrowserNewContextOptions { ViewportSize = DesktopViewport(Device[DesktopPrefix.Length..]) }
+            : new BrowserNewContextOptions(Playwright.Devices[Device]);
+        options.BaseURL = AppServer.BaseUrl;
+        options.ColorScheme = ColorScheme.Light;
         return options;
+    }
+
+    private const string DesktopPrefix = "Desktop ";
+
+    private static ViewportSize DesktopViewport(string size)
+    {
+        var parts = size.Split('x');
+        return new ViewportSize { Width = int.Parse(parts[0]), Height = int.Parse(parts[1]) };
     }
 
     /// <summary>

@@ -58,7 +58,7 @@ public sealed partial class GameFlowTests(string device) : DeviceTest(device)
         await Tap("confirm-phase");
         await ExpectPhaseAsync("RoundStart");
         await Expect(ById("supremacy")).ToHaveAttributeAsync("data-value", "1");
-        await Expect(ById("phase")).ToContainTextAsync("Round 2");
+        await Expect(ById("round")).ToHaveTextAsync("Round 2");
 
         // Supremacy step 1 brings Thufir Hawat into play.
         await Expect(ById("leader-ThufirHawat")).ToHaveCountAsync(1);
