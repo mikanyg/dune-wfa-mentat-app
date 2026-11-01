@@ -4,6 +4,9 @@ public enum HelpTopic
 {
     CombatPower,
     DesertHazards,
+
+    /// <summary>This round's Tactical cards in full (from "Harkonnen Targets" in the rail).</summary>
+    TacticalCards,
 }
 
 /// <summary>Opens and closes the rules help sheets. The sheet itself is hosted by the layout.</summary>

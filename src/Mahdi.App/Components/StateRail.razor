@@ -3,6 +3,7 @@
 @using Mahdi.Engine.Guidance
 @using Mahdi.Engine.Model
 @inject GameSession Session
+@inject HelpService Help
 
 @* The automa's state at a glance: phase stepper, Target, dice, Reinforcements, Leaders, Imperium.
    On short landscape screens it collapses to an icon strip. *@
@@ -24,27 +25,27 @@
     <div class="rail-body">
         <PhaseStepper Phase="State.Phase" />
 
+        @* The map of this round's Tactical cards; the heading (and the map) open the cards in full. *@
         <section class="rail-section rail-tactical" data-testid="rail-target">
-            <div class="rail-tactical-text">
-                <h3>Target Sietch</h3>
-                <p class="rail-value" data-testid="target-sietch">@TargetName</p>
-                @if (TargetCard is { } target)
-                {
-                    <p class="rail-sub" data-testid="target-sector">@GuidanceBuilder.SectorName(target.Sector)</p>
-                }
-                <h3>Harvesting Sector</h3>
-                <p class="rail-value small" data-testid="harvest-sector">@Session.Guidance.HarvestSectorName(State)</p>
-            </div>
+            <h3>
+                <button type="button" class="rail-link" data-testid="open-targets" aria-haspopup="dialog"
+                        @onclick="() => Help.Show(HelpTopic.TacticalCards)">Harkonnen Targets <span aria-hidden="true">›</span></button>
+            </h3>
             @if (HasCards)
             {
-                <figure class="rail-map">
+                <button type="button" class="rail-map" aria-label="Show the Harvesting Sector and Target Sietch cards"
+                        @onclick="() => Help.Show(HelpTopic.TacticalCards)">
                     <SectorMap Harvest="HarvestSector" Target="TargetCard?.Sector" Pin="TargetCard?.Pin" Labels="true" TestId="rail-map" />
-                    <figcaption class="map-legend">
+                    <span class="map-legend">
                         <span><span class="swatch swatch-harvest"></span>Harvest</span>
                         <span><span class="swatch swatch-target"></span>Target</span>
                         <span><span class="swatch swatch-pin"></span>Sietch</span>
-                    </figcaption>
-                </figure>
+                    </span>
+                </button>
+            }
+            else
+            {
+                <p class="rail-note">Drawn at the start of the round.</p>
             }
         </section>
 
@@ -183,7 +184,6 @@
 
     private bool HasCards => HarvestSector is not null;
 
-    private string TargetName => TargetCard?.Sietch ?? "—";
 
     private void SwitchDeck() => Session.Execute(new SetNextDeck(GameReducer.Other(State.NextDeck)));
 

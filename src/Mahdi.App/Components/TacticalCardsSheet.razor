@@ -1,0 +1,60 @@
+@using Mahdi.Engine.Guidance
+@using Mahdi.Engine.Model
+@inject GameSession Session
+
+@* This round's two Tactical cards in full, opened from "Harkonnen Targets" in the rail. *@
+<div class="sheet-backdrop" data-testid="tc-backdrop" @onclick="OnClose"></div>
+<section class="sheet tc-sheet" role="dialog" aria-modal="true" aria-label="Harkonnen Targets" data-testid="tc-sheet">
+    <header class="sheet-head">
+        <h2>Harkonnen Targets</h2>
+        <button type="button" class="icon-btn" data-testid="tc-close" aria-label="Close" @onclick="OnClose">×</button>
+    </header>
+    <div class="sheet-body">
+        <div class="tc-cards">
+            <article class="tc-card harvest" data-testid="tc-harvest">
+                <span class="tactical-role">Harvesting Sector</span>
+                @if (HarvestCard is { } harvest)
+                {
+                    <SectorMap Harvest="harvest.Sector" Pin="harvest.Pin" Labels="true" />
+                    <span class="tc-sector" data-testid="harvest-sector">@GuidanceBuilder.SectorName(harvest.Sector)</span>
+                    <span class="tc-sietch">Card: @harvest.Sietch</span>
+                    <p class="tc-hint">The Harkonnen Harvesters go to this Sector this round.</p>
+                }
+                else
+                {
+                    <span class="tc-sector muted">Not drawn yet</span>
+                }
+            </article>
+            <article class="tc-card target" data-testid="tc-target">
+                <span class="tactical-role">Target Sietch</span>
+                @if (TargetCard is { } target)
+                {
+                    <SectorMap Target="target.Sector" Pin="target.Pin" Labels="true" />
+                    <span class="tc-sector" data-testid="target-sietch">@target.Sietch</span>
+                    <span class="tc-sietch">@GuidanceBuilder.SectorName(target.Sector)</span>
+                    <p class="tc-hint">The Harkonnen Legions move towards and attack this Sietch.</p>
+                }
+                else
+                {
+                    <span class="tc-sector muted" data-testid="target-sietch">@(HarvestCard is null ? "Not drawn yet" : "No eligible Sietch this round")</span>
+                }
+            </article>
+        </div>
+        @if (Session.State is { Tactical.Discard.IsEmpty: false } state)
+        {
+            <p class="tc-discard" data-testid="tc-discard">
+                Discarded this round: @string.Join(", ", state.Tactical.Discard.Select(id => Session.Content.Card(id).Sietch))
+            </p>
+        }
+        <p class="rule-ref">Rulebook p. 37</p>
+    </div>
+</section>
+
+@code {
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    private TacticalCard? HarvestCard => Session.State?.Tactical.HarvestCardId is { } id ? Session.Content.Card(id) : null;
+
+    private TacticalCard? TargetCard => Session.State?.Tactical.TargetCardId is { } id ? Session.Content.Card(id) : null;
+}
