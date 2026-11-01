@@ -4,7 +4,7 @@ Companion app for the Mahdi Solo Mode of *Dune: War for Arrakis*. The player run
 
 ## Core design constraint
 
-The app **cannot see the board**. It owns everything off the map (dice, Tactical cards, Reinforcements, deck alternation, spice/Imperium/Bans, Supremacy, Leaders, phase flow). The player owns the map: each Harkonnen result is shown as a fallback chain ("do the first one that is possible") with this round's Target Sietch and Harvesting Sector filled in. Keep it at **one tap per Harkonnen turn** and **buttons only, never typed numbers**.
+The app **cannot see the board**. It owns everything off the map (dice and Tactical cards in app-driven mode, Reinforcements, deck alternation, spice/Imperium/Bans, Supremacy, Leaders, phase flow). The player owns the map: each Harkonnen result is shown as a fallback chain ("do the first one that is possible") with this round's Target Sietch and Harvesting Sector filled in. Keep it at **one tap per Harkonnen turn** and **buttons only, never typed numbers**.
 
 ## Layout
 
@@ -18,10 +18,11 @@ The app **cannot see the board**. It owns everything off the map (dice, Tactical
   - `Guidance/GuidanceBuilder.cs`: all player-facing rules text (paraphrased, with rulebook page references).
   - `Content/*.json`: embedded game data (dice faces, Spice Must Flow table, Supremacy track, Tactical cards, Leaders, Bans). Fix data here, not in code.
   - `Persistence/SaveData.cs`: save format `{version, diceMode, seed, history}`, source-generated JSON.
+  - Play mode (`DiceMode`, names kept for saves): `AppRolls` is **app-driven** (the app rolls the dice and draws the Tactical cards), `Physical` is **player-driven** (the player rolls and draws, then taps the die face and the cards). Player-driven rounds start without cards (`RoundStarted` with null cards); `EnterHarvestCard` / `EnterTargetCard` record them (an ineligible Target card is discarded), and a destroyed Target is discarded (`TargetSietchDiscarded`) until the player enters the next one. `TacticalDeck.AwaitingHarvest` / `AwaitingTarget` drive the `TacticalCardPicker`.
 - `src/Mahdi.App`: Blazor UI.
   - `Services/GameSession.cs` is the single source of truth: executes commands, saves after every change, raises `Changed`.
   - `GameStore` wraps localStorage. `ThemeService` and `wwwroot/js/app.js` handle the theme, applied before Blazor starts.
-  - Pages: `Home`, `NewGame` (dice mode; `?seed=` honoured only outside Production), `GamePage` (switches on `Phase`), `Reference`.
+  - Pages: `Home`, `NewGame` (play mode: app-driven or player-driven; `?seed=` honoured only outside Production), `GamePage` (switches on `Phase`), `Reference`.
   - Components: `WarTable`, `StateRail` (collapses to an icon strip on short landscape screens), `EventSheet`, `BattleSheet` (start / round / result views; the open battle lives in `GameState.Battle`, minimised it shows as a battle bar), `FacePicker`, `GuidanceCard`, `SpicePanel`, `TacticalCards`, `SectorMap` (schematic board map oriented like the Tactical cards: Harvesting Sector filled, Target Sector hatched, a pin on the Target Sietch; used on the round-start cards, in the rail and as a thumbnail in the phone icon strip; geometry in the engine's `Model/BoardMap.cs`), `DieIcon` (original glyphs, no game art).
   - Rules help: `HelpService` opens a help sheet hosted by `MainLayout` (`HelpSheetHost`). `TermText` turns the first "Combat Power" in any guidance text into a link to `CombatPowerSheet`, whose content is `Guidance/CombatPowerHelp.cs` in the engine; the War Table quick actions also have a Combat Power button. The Desert Hazards card (`DesertHazardsCard`, built by `GuidanceBuilder.DesertHazards(state)`) links its Sandworm and Coriolis Storm sections to `DesertHazardSheet` (content in `Guidance/DesertHazardHelp.cs`, numbers in `Rules/HazardRules.cs`); the link passes the attack as the sheet's focus.
   - CSS: `wwwroot/css/app.css` (theme tokens for light "Desert Parchment" and dark "Arrakis Night", base styles, buttons, shell) and `wwwroot/css/game.css` (screens and responsive rules). Short landscape phones use `@media (max-height: 520px)`; narrow screens use `max-width: 760px` (during a game the header title shrinks to its ◆) and `max-width: 520px` (round above the phase, Supremacy as "4/10").

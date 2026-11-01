@@ -25,17 +25,50 @@ public static class CommandHandler
             case CompleteSetup:
                 Require(state.Phase == Phase.Setup, "Setup is already complete.");
                 batch.Emit(new SetupCompleted());
-                batch.Emit(TacticalDeck.DrawRound(content, batch.State, random, 1));
+                batch.Emit(TacticalDeck.StartRound(content, batch.State, random, 1));
                 break;
 
             case ChangeDiceMode x:
                 Require(x.Mode != state.DiceMode, "That dice mode is already selected.");
                 batch.Emit(new DiceModeChanged(x.Mode));
+                if (x.Mode == DiceMode.AppRolls)
+                {
+                    DrawMissingCards(content, batch, random);
+                }
+
                 break;
 
             case ConfirmRoundStart:
                 Require(state.Phase == Phase.RoundStart, "Not at the start of a round.");
+                Require(!TacticalDeck.AwaitingHarvest(state) && !TacticalDeck.AwaitingTarget(content, state),
+                    "Enter the Tactical cards you drew first.");
                 batch.Emit(new RoundStartConfirmed());
+                break;
+
+            case EnterHarvestCard x:
+                Require(state.DiceMode == DiceMode.Physical, "App-driven mode: the app draws the Tactical cards.");
+                Require(state.Phase == Phase.RoundStart, "The Harvesting Sector card is drawn at the start of a round.");
+                Require(content.TacticalCards.Any(c => c.Id == x.CardId), "Unknown Tactical card.");
+                batch.Emit(new HarvestCardEntered(x.CardId));
+                break;
+
+            case EnterTargetCard x:
+                Require(state.DiceMode == DiceMode.Physical, "App-driven mode: the app draws the Tactical cards.");
+                Require(content.TacticalCards.Any(c => c.Id == x.CardId), "Unknown Tactical card.");
+                Require(state.Tactical.HarvestCardId is not null, "Enter the Harvesting Sector card first.");
+                Require(state.Tactical.TargetCardId is null, "There is already a Target Sietch.");
+                Require(TacticalDeck.Remaining(content, state.Tactical).Contains(x.CardId),
+                    "That card is not in the deck: it is in play or discarded.");
+                if (TacticalDeck.IsEligibleTarget(content, state.Tactical, x.CardId, content.Card(state.Tactical.HarvestCardId!).Sector))
+                {
+                    batch.Emit(new TargetCardEntered(x.CardId));
+                }
+                else
+                {
+                    batch.Emit(new TacticalCardDiscarded(x.CardId));
+                    EndDrawIfNoTargetLeft(content, batch);
+                }
+
                 break;
 
             case ConfirmVehicles:
@@ -44,7 +77,7 @@ public static class CommandHandler
                 break;
 
             case RollHarkonnenDie:
-                RequireTurnCanStart(state);
+                RequireTurnCanStart(content, state);
                 Require(state.DiceMode == DiceMode.AppRolls || state.Dice.ForcedFace is not null,
                     "Physical dice mode: enter the result you rolled.");
                 if (state.Dice.ForcedFace is { } forced)
@@ -60,7 +93,7 @@ public static class CommandHandler
                 break;
 
             case EnterHarkonnenDie x:
-                RequireTurnCanStart(state);
+                RequireTurnCanStart(content, state);
                 if (state.Dice.ForcedFace is { } chosen)
                 {
                     Require(x.Face == chosen, $"Truthtrance chose {chosen} for this turn.");
@@ -81,7 +114,7 @@ public static class CommandHandler
                 break;
 
             case PlayTruthtrance x:
-                RequireTurnCanStart(state);
+                RequireTurnCanStart(content, state);
                 Require(DiceRules.CanChooseWithTruthtrance(content, state.Dice, x.Face),
                     $"Truthtrance cannot choose {x.Face}: too many spent dice already show it.");
                 batch.Emit(new TruthtranceChosen(x.Face));
@@ -114,7 +147,7 @@ public static class CommandHandler
                 batch.Emit(new RoundEnded());
                 if (batch.State.Phase != Phase.GameOver)
                 {
-                    batch.Emit(TacticalDeck.DrawRound(content, batch.State, random, state.Round + 1));
+                    batch.Emit(TacticalDeck.StartRound(content, batch.State, random, state.Round + 1));
                 }
 
                 break;
@@ -126,7 +159,7 @@ public static class CommandHandler
                 batch.Emit(new SietchDestroyed(x.CardId, x.Rank));
                 if (x.CardId == state.Tactical.TargetCardId && batch.State.Phase != Phase.GameOver)
                 {
-                    batch.Emit(TacticalDeck.RedrawTarget(content, batch.State, random));
+                    ReplaceTarget(content, batch, random);
                 }
 
                 break;
@@ -276,7 +309,7 @@ public static class CommandHandler
             batch.Emit(new SietchDestroyed(sietch, x.SietchRank!.Value));
             if (sietch == state.Tactical.TargetCardId && batch.State.Phase != Phase.GameOver)
             {
-                batch.Emit(TacticalDeck.RedrawTarget(content, batch.State, random));
+                ReplaceTarget(content, batch, random);
             }
         }
 
@@ -307,9 +340,10 @@ public static class CommandHandler
     private static BattleState RequireBattle(GameState state) =>
         state.Battle ?? throw new CommandRejectedException("No battle is being fought.");
 
-    private static void RequireTurnCanStart(GameState state)
+    private static void RequireTurnCanStart(GameContent content, GameState state)
     {
         Require(state.Phase == Phase.ActionResolution, "Not in Action Resolution.");
+        Require(!TacticalDeck.AwaitingTarget(content, state), "Draw a new Target Sietch card first.");
         Require(state.Dice.Pending is null, "Finish the current Harkonnen turn first.");
         Require(state.Dice.Unused > 0, "The Harkonnens have no unused dice.");
     }
@@ -323,6 +357,46 @@ public static class CommandHandler
     }
 
     /// <summary>Collects events and keeps a running state so later events can depend on earlier ones.</summary>
+    /// <summary>The Target Sietch was destroyed: the app draws a new one, or the player discards it and draws one.</summary>
+    private static void ReplaceTarget(GameContent content, Batch batch, IRandomSource random)
+    {
+        if (batch.State.DiceMode == DiceMode.AppRolls)
+        {
+            batch.Emit(TacticalDeck.RedrawTarget(content, batch.State, random));
+            return;
+        }
+
+        batch.Emit(new TargetSietchDiscarded());
+        EndDrawIfNoTargetLeft(content, batch);
+    }
+
+    /// <summary>
+    /// Player-driven: with no eligible Target left in the deck, the round goes on without a Target Sietch. (Shuffling
+    /// the discards back would not help: they all show the Harvesting Sector or a destroyed Sietch.)
+    /// </summary>
+    private static void EndDrawIfNoTargetLeft(GameContent content, Batch batch)
+    {
+        if (!TacticalDeck.AwaitingTarget(content, batch.State))
+        {
+            batch.Emit(new TargetSietchDrawn(null, [], false));
+        }
+    }
+
+    /// <summary>Switching to app-driven mid-draw: the app draws whatever the player has not entered yet.</summary>
+    private static void DrawMissingCards(GameContent content, Batch batch, IRandomSource random)
+    {
+        if (TacticalDeck.AwaitingHarvest(batch.State))
+        {
+            var deck = content.TacticalCards.Select(c => c.Id).ToList();
+            batch.Emit(new HarvestCardEntered(deck[random.Next(deck.Count)]));
+        }
+
+        if (TacticalDeck.AwaitingTarget(content, batch.State))
+        {
+            batch.Emit(TacticalDeck.RedrawTarget(content, batch.State, random));
+        }
+    }
+
     private sealed class Batch(GameContent content, GameState state)
     {
         public GameState State { get; private set; } = state;

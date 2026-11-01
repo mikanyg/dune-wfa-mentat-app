@@ -10,13 +10,15 @@ public enum DieFace
     House,
 }
 
-/// <summary>Who produces the Harkonnen die results.</summary>
+/// <summary>
+/// Who drives the Harkonnen randomness. Shown as "App-driven" and "Player-driven"; the names are kept for saved games.
+/// </summary>
 public enum DiceMode
 {
-    /// <summary>The app rolls virtual dice for the Harkonnens.</summary>
+    /// <summary>App-driven: the app rolls the Harkonnen dice and draws the Tactical cards.</summary>
     AppRolls,
 
-    /// <summary>The player rolls the physical die and taps the face shown.</summary>
+    /// <summary>Player-driven: the player rolls the dice and draws the Tactical cards, then taps what they got.</summary>
     Physical,
 }
 

@@ -63,8 +63,10 @@
                     }
                     <button type="button" class="sheet-tile" data-testid="ev-dice-mode"
                             @onclick="() => Run(new ChangeDiceMode(State.DiceMode == DiceMode.AppRolls ? DiceMode.Physical : DiceMode.AppRolls))">
-                        <span class="tile-title">Dice: @(State.DiceMode == DiceMode.AppRolls ? "app rolls" : "physical")</span>
-                        <span class="tile-desc">Switch to @(State.DiceMode == DiceMode.AppRolls ? "rolling physical dice" : "app rolls")</span>
+                        <span class="tile-title">Mode: @(State.DiceMode == DiceMode.AppRolls ? "app-driven" : "player-driven")</span>
+                        <span class="tile-desc">@(State.DiceMode == DiceMode.AppRolls
+                            ? "Switch to player-driven: you roll the dice and draw the Tactical cards"
+                            : "Switch to app-driven: the app rolls the dice and draws the Tactical cards")</span>
                     </button>
                     <button type="button" class="sheet-tile atreides-tile" data-testid="ev-atreides-victory" @onclick="() => view = View.Victory">
                         <span class="tile-title">Atreides victory</span>

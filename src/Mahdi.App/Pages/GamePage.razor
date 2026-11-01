@@ -2,6 +2,7 @@
 @using Mahdi.Engine.Commands
 @using Mahdi.Engine.Guidance
 @using Mahdi.Engine.Model
+@using Mahdi.Engine.Rules
 @inject GameSession Session
 @inject HelpService Help
 @implements IDisposable
@@ -47,12 +48,20 @@ else
                     <span class="battle-bar-open">Open ▶</span>
                 </button>
             }
+            @if (state.Phase != Phase.RoundStart && TacticalDeck.AwaitingTarget(Session.Content, state))
+            {
+                <TacticalCardPicker State="state" />
+            }
             @switch (state.Phase)
             {
                 case Phase.Setup:
                     <GuidanceCard Guidance="GuidanceBuilder.Setup()" Class="frame" NotesOpen="true" TestId="setup-guidance" />
                     <button type="button" class="btn btn-primary btn-big" data-testid="confirm-phase"
                             @onclick="() => Session.Execute(new CompleteSetup())">Setup done: start round 1 ▶</button>
+                    break;
+
+                case Phase.RoundStart when TacticalDeck.AwaitingHarvest(state) || TacticalDeck.AwaitingTarget(Session.Content, state):
+                    <TacticalCardPicker State="state" />
                     break;
 
                 case Phase.RoundStart:
@@ -68,7 +77,7 @@ else
                             @onclick="() => Session.Execute(new ConfirmVehicles())">Vehicles placed: begin actions ▶</button>
                     break;
 
-                case Phase.ActionResolution:
+                case Phase.ActionResolution when !TacticalDeck.AwaitingTarget(Session.Content, state):
                     <WarTable State="state" />
                     break;
 

@@ -276,7 +276,9 @@ public sealed class GuidanceBuilder(GameContent content)
             steps.Add(new(text));
         }
 
-        steps.Add(new("The app reshuffles the 8 Tactical cards for the next round."));
+        steps.Add(new(state.DiceMode == DiceMode.Physical
+            ? "Shuffle all 8 Tactical cards for the next round."
+            : "The app reshuffles the 8 Tactical cards for the next round."));
 
         return new Guidance(
             $"End of Round {state.Round}",
