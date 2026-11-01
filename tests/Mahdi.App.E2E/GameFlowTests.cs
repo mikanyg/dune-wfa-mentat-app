@@ -294,6 +294,28 @@ public sealed partial class GameFlowTests(string device) : DeviceTest(device)
     private static partial Regex DoneStep();
 
     [Test]
+    public async Task RailShowsTheTargetFirstAndTheImperiumLast()
+    {
+        await StartGameAsync(seed: 11);
+        await AdvanceToActionsAsync();
+        if (IsPhone)
+        {
+            await Tap("rail-toggle");
+        }
+
+        var tops = new List<float>();
+        foreach (var id in RailOrder)
+        {
+            tops.Add((await ById(id).BoundingBoxAsync())!.Y);
+        }
+
+        Assert.That(tops, Is.Ordered.Ascending, string.Join(", ", RailOrder));
+    }
+
+    private static readonly string[] RailOrder =
+        ["phase-stepper", "rail-target", "rail-dice", "rail-reinforcements", "rail-leaders", "rail-imperium"];
+
+    [Test]
     public async Task RailMapShowsTheHarvestingSectorAndTheTargetSietch()
     {
         await StartGameAsync(seed: 11);
