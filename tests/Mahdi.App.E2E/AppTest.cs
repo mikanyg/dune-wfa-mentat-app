@@ -3,12 +3,9 @@ using Microsoft.Playwright;
 namespace Mahdi.App.E2E;
 
 /// <summary>
-/// Base class running every test on both target devices in landscape (WebKit, see e2e.runsettings).
+/// Base class for browser tests on a Playwright device profile (WebKit, see e2e.runsettings), with the shared helpers.
 /// </summary>
-[TestFixture("iPad Pro 11 landscape")]
-[TestFixture("iPhone 15 Pro landscape")]
-[Parallelizable(ParallelScope.Self)]
-public abstract class DeviceTest(string device) : PageTest
+public abstract class AppTest(string device) : PageTest
 {
     protected string Device { get; } = device;
 
