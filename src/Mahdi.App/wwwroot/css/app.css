@@ -105,6 +105,30 @@ body {
     -webkit-tap-highlight-color: transparent;
 }
 
+/* Scrollbars in the theme colours (the rail, sheets and the page): a thin sand-coloured thumb on no track. */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--rule) transparent;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--rule);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
+}
+
 body {
     min-height: 100dvh;
     padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
